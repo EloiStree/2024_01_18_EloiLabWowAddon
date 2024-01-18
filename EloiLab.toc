@@ -1,0 +1,12 @@
+## Interface: 90001
+## Title: |cff0070DE[Eloi Lab Addon |r
+## Author: Éloi Strée
+## Version: 1.0
+## Notes: Hello World Eloi Lab Source & Guild: https://github.com/EloiStree/HelloWarcraftQAXR
+## Notes-url: https://github.com/EloiStree/HelloWarcraftQAXR
+## DefaultState: enabled
+## SavedVariables: MEMO_WINDOWOPEN, MEMO_METAINFOTEXT, MEMO_PLAYERNOTE
+
+EloiLabUtility.lua
+EloiLabAddon.lua
+ReportBot.lua
