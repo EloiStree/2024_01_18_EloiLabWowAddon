@@ -1,70 +1,33 @@
-tickModulo=2
-tickRangeInSecond=5
+
+
+tickModulo=100
+tickRangeInSecond=10
 tickId=1
-maxtextvalue =5000
-TextInMemory = {}
 
-
-
-useAddressTagInjection=true;
-tagInjectionValueTextIndex=250100000000
-tagInjectionValueMemoryChanged=250100000001
-
-
-function SetHasChangedTo(randomUniqueNumber)
-    TextInMemory[1]=randomUniqueNumber
-end
-function SetHasChangedToTag()
-    TextInMemory[1]=tagInjectionValueMemoryChanged
-end
-
-local hasChangedIndex=0
-function SetHasChangedIncrement()
-    hasChangedIndex =hasChangedIndex+1
-    TextInMemory[1]=hasChangedIndex
-end
+DoubleMemo = {}
 
 local time=GetTime()
+
 function RefreshTheTickBoundary()
     time= GetTime()
  
     tickId =math.floor((time/tickRangeInSecond)%tickModulo)
-    TextInMemory[0]= 12345600 + tickId --startTickDynamic
-    TextInMemory[1]= 0 -- Value used to check if the memory changed 
-    FlushValueBetweenBoundary()
-    TextInMemory[maxtextvalue+1]= 65432100 + tickId --stopTickDynamic
+    DoubleMemo[0]= 12345600 -- startTickFixed 
+    -- ADD DOUBLE HERE
+    DoubleMemo[100]= 65432100 --midle tick fixed 
+    -- ADD Boolean here
+    DoubleMemo[200]= 51515100 --stopTickFixed
+    DoubleMemo[1]= DoubleMemo[0] + tickId --startTickDynamic
+    DoubleMemo[101]= DoubleMemo[100] +tickId --stopTickDynamic
 end
+
+flusBetweenDefaultValue =4200
 function FlushValueBetweenBoundary()
-    for i=2,maxtextvalue do
-        TextInMemory[i]=math.floor(2501000+(i%255))
-        --TextInMemory[i]=0
+    for i=2,99 do
+        DoubleMemo[i]=math.floor(i)
     end
+    DoubleMemo[2]=math.floor(flusBetweenDefaultValue+tickId)
 end
-
-function FlushValueBetweenBoundaryToInt(value)
-    for i=2,maxtextvalue do
-        TextInMemory[i]=math.floor(value)
-        --TextInMemory[i]=0
-    end
-end
-
-
-charValueTempInt=0
-function SetMemoryText(text)
-    for i = 2, maxtextvalue do
-        if(i>maxtextvalue) then
-            TextInMemory[i] =0
-        else
-            if(i<=#text)then
-                TextInMemory[i] = math.floor(string.byte(text, i)*10000 +i)
-            else 
-                TextInMemory[i] =0
-            end
-        end
-    end
-end
-RefreshTheTickBoundary()
---SetMemoryText("0123456789 ABC xyz  Hello World my friend ! 2501 42 :) _1234567890)^-")
 
 
 
@@ -80,13 +43,14 @@ CustomFunction={}
 
 
 dico = {    }
-
+    
 CustomFunction["GetMetaInfo"]=function()
     
+      
+    RefreshTheTickBoundary()
+    FlushValueBetweenBoundary()
+    local anchorTick =(string.format("TICK: %s\n START %s\n START TICK %s\n STOP %s\n STOPTICK %s\n",tickId,DoubleMemo[0],DoubleMemo[1],DoubleMemo[100],DoubleMemo[101]))
    
-    local anchorTick =(string.format("TICK: %s\n START TICK %s\n STOPTICK %s\n",tickId,TextInMemory[0],TextInMemory[maxtextvalue+1]))
-   
-
 
     local player ="player"
     local target ="target"
@@ -510,17 +474,6 @@ CustomFunction["GetMetaInfo"]=function()
         result = result .. key .. ":" .. value .. "\n"
     end
     
-
-    RefreshTheTickBoundary()
-    useAddressTagInjection=tickId%2==0
-    if( useAddressTagInjection)then
-        FlushValueBetweenBoundaryToInt(tagInjectionValueTextIndex)
-        SetHasChangedTo(tagInjectionValueMemoryChanged)
-    else
-         SetMemoryText(result)
-
-         SetHasChangedIncrement(hasChangeIndex)
-    end
     return result
     
 end
