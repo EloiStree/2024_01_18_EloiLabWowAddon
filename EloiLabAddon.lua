@@ -70,7 +70,7 @@ Strings.DebugKeyName="W"
 
 
 --||||||||      SAVED MEMORY VAR ACCESS      |||||||||
-local MEMO= {}
+MEMO= {}
 
 MEMO.IS_ADDONLOADED= function() return Bools.addonLoaded end
 MEMO.SET_WINDOWOPEN=function (value)  MEMO_PLAYERNOTE=value end
@@ -79,6 +79,32 @@ MEMO.SET_PLAYERNOTE=function (value) MEMO_PLAYERNOTE=value end
 MEMO.GET_WINDOWOPEN=function () return MEMO_PLAYERNOTE end
 MEMO.GET_METAINFOTEXT=function () return  MEMO_METAINFOTEXT end
 MEMO.GET_PLAYERNOTE=function () return MEMO_PLAYERNOTE end
+
+MEMO.SetTagMode =function (modeId) 
+    if modeId == "Tag" or modeId==0 or modeId=="t"or modeId=="T" then
+        MEMO_TAGMODE =0
+    end  
+    if modeId == "Index" or modeId==1  or modeId=="i"or modeId=="i"then
+        MEMO_TAGMODE =1
+    end   
+     if modeId == "Value" or modeId==2  or modeId=="v"or modeId=="v"then
+        MEMO_TAGMODE =2
+    end
+end
+MEMO.IsTagMode =function (modeId) 
+    if(modeId==nil or MEMO_TAGMODE==next) then return false end
+    if modeId == "Tag" or modeId==0 or modeId=="t"or modeId=="T" then
+        return MEMO_TAGMODE ==0
+    end  
+    if modeId == "Index" or modeId==1  or modeId=="i"or modeId=="i"then
+        return MEMO_TAGMODE ==1
+    end   
+     if modeId == "Value" or modeId==2  or modeId=="v"or modeId=="v"then
+        return MEMO_TAGMODE ==2
+    end
+    return false
+end
+
 
 MEMO.PrintALL=function () 
     print ("## CHECK SAVED MEMORY ##")
@@ -273,7 +299,8 @@ function frame:OnUpdate(aElapsed)
         DebugMemoryTextFrame:ShowFrameOnOff(Bools.currentWindowOpenRequest)
     end
     Ints.framecount=Ints.framecount+1
-    local metaInfo =CustomFunction.GetMetaInfo();
+    local metaInfo =CustomFunction.GetMetaInfo() ;
+    
     MainPurpose.SetTextInStaticMemory(CustomFunction.GetMetaInfo())
     DebugMemoryTextFrame:SetTextContent(metaInfo)
 
@@ -347,8 +374,26 @@ function SlashCmdList.ELOILABLIST(msg)
     print("- /elhide : hide info");
     print("- /elstart : Start to work and continue when you reload");
     print("- /elstop : Stop to work and need start to continue after reload");
+    print("- /eltag : Put that address tag in the memory");
+    print("- /elindex : Put the index Tag in the memory");
+    print("- /elvalue : Put the value in the memory");
 end
 
+
+SLASH_ELOILABMODTAG1 = "/eltag";
+function SlashCmdList.ELOILABMODTAG(msg)
+    MEMO.SetTagMode("Tag")
+end
+
+SLASH_ELOILABMODINDEX1 = "/elindex";
+function SlashCmdList.ELOILABMODINDEX(msg)
+    MEMO.SetTagMode("Index")
+end
+
+SLASH_ELOILABMODVALUE1 = "/elvalue";
+function SlashCmdList.ELOILABMODVALUE(msg)
+    MEMO.SetTagMode("Value")
+end
 
 
 SLASH_ELOILABCHECK1 = "/elcheck";

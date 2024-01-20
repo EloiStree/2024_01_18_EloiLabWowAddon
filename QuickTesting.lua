@@ -1,0 +1,1 @@
+print("Quick Test")

@@ -5,8 +5,9 @@
 ## Notes: Hello World Eloi Lab Source & Guild: https://github.com/EloiStree/HelloWarcraftQAXR
 ## Notes-url: https://github.com/EloiStree/HelloWarcraftQAXR
 ## DefaultState: enabled
-## SavedVariables: MEMO_WINDOWOPEN, MEMO_METAINFOTEXT, MEMO_PLAYERNOTE
+## SavedVariables: MEMO_WINDOWOPEN, MEMO_METAINFOTEXT, MEMO_PLAYERNOTE,MEMO_TAGMODE
 
-EloiLabUtility.lua
 EloiLabAddon.lua
+EloiLabUtility.lua
+QuickTesting.lua
 ReportBot.lua

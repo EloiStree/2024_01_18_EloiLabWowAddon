@@ -1,14 +1,47 @@
-tickModulo=2
-tickRangeInSecond=5
+tickModulo=3
+tickRangeInSecond=6
 tickId=1
-maxtextvalue =5000
+maxtextvalue =4000
 TextInMemory = {}
-
 
 
 useAddressTagInjection=true;
 tagInjectionValueTextIndex=250100000000
 tagInjectionValueMemoryChanged=250100000001
+tagInjectionValueDoubleArray = 9876543210000 
+tagInjectionAddonState = 123454321 
+
+tagAddonState =0
+
+AddonStateInMemory = {}
+AddonStateInMemory[0]=0
+
+
+function  RefreshAddonStateAndUpdateOnChanged() 
+    -- We want to minimize the time in cheat engine.
+    -- So I want a address for the OnValueChange and some info about the addon.
+    -- 111100000000 1111 are the value on changed 00000000 are 0-9 value represnting addon state 
+    
+
+    -- If 0000001 index 0000002 value   00000 tag mode
+    if MEMO.IsTagMode("Tag") then
+        AddonStateInMemory[0]=123454320
+    else
+        local value = ((GetTime()*1000)%1000)*1000000000
+        
+        if MEMO.IsTagMode(1) then 
+            value= value+1
+        elseif MEMO.IsTagMode(2) then 
+            value= value+2
+        else end
+
+        if MEMO.GET_WINDOWOPEN() then 
+            value= value + 10
+        end
+        AddonStateInMemory[0]=value
+    end
+
+end
 
 
 function SetHasChangedTo(randomUniqueNumber)
@@ -28,7 +61,15 @@ local time=GetTime()
 function RefreshTheTickBoundary()
     time= GetTime()
  
+
     tickId =math.floor((time/tickRangeInSecond)%tickModulo)
+
+    if tickId==0 then MEMO.SetTagMode("Tag") 
+    elseif tickId==1 then  MEMO.SetTagMode("Index") 
+    else  MEMO.SetTagMode("Value")  end
+
+
+
     TextInMemory[0]= 12345600 + tickId --startTickDynamic
     TextInMemory[1]= 0 -- Value used to check if the memory changed 
     FlushValueBetweenBoundary()
@@ -36,10 +77,18 @@ function RefreshTheTickBoundary()
 end
 function FlushValueBetweenBoundary()
     for i=2,maxtextvalue do
-        TextInMemory[i]=math.floor(2501000+(i%255))
+        --TextInMemory[i]=math.floor(2501000+(i%255))
+        TextInMemory[i]=0
+        --TextInMemory[i]=-9999999
+    end
+end
+function SetValueAsIndex()
+    for i=2,maxtextvalue do
+        TextInMemory[i]=i
         --TextInMemory[i]=0
     end
 end
+
 
 function FlushValueBetweenBoundaryToInt(value)
     for i=2,maxtextvalue do
@@ -50,19 +99,28 @@ end
 
 
 charValueTempInt=0
+-- Do we want to store the value of the char and the index where it is store in the samem place ? 
+-- Was useful before I create the tag vs index vs value mode
+local useByteAndIndexSameMemory=false
 function SetMemoryText(text)
     for i = 2, maxtextvalue do
         if(i>maxtextvalue) then
             TextInMemory[i] =0
         else
             if(i<=#text)then
-                TextInMemory[i] = math.floor(string.byte(text, i)*10000 +i)
+                --if(useByteAndIndexSameMemory)then 
+                --    TextInMemory[i] = math.floor(string.byte(text, i)*10000 +i)
+                --else 
+               TextInMemory[i] = math.floor(string.byte(text, i))
+                --end
             else 
                 TextInMemory[i] =0
             end
         end
     end
 end
+
+
 RefreshTheTickBoundary()
 --SetMemoryText("0123456789 ABC xyz  Hello World my friend ! 2501 42 :) _1234567890)^-")
 
@@ -79,11 +137,10 @@ JustTest.Tick=0
 CustomFunction={}
 
 
+doubleMemoryArray ={}
 dico = {    }
 
-CustomFunction["GetMetaInfo"]=function()
-    
-   
+CustomFunction["GetMetaInfo"]=function()    
     local anchorTick =(string.format("TICK: %s\n START TICK %s\n STOPTICK %s\n",tickId,TextInMemory[0],TextInMemory[maxtextvalue+1]))
    
 
@@ -119,12 +176,27 @@ CustomFunction["GetMetaInfo"]=function()
     
     
     local facing =isDonjon and 0 or GetPlayerFacing()/(2.0*3.1418)
+  
+    if MEMO.IsTagMode("Tag") then
+        doubleMemoryArray[0]= tagInjectionValueDoubleArray  -- World position X : 9876543210001 : -9879.88
+        doubleMemoryArray[1]= tagInjectionValueDoubleArray  -- World position Y : 9876543210002 : -3.88
+        doubleMemoryArray[200]= tagInjectionValueDoubleArray  -- World position Z : 9876543210003 : -6579.88
     
+    elseif MEMO.IsTagMode("Index") then
+        doubleMemoryArray[0]=  0
+        doubleMemoryArray[1]=  1
+        doubleMemoryArray[200]=  200
+    elseif MEMO.IsTagMode("Value") then
+        doubleMemoryArray[0]=  px 
+        doubleMemoryArray[1]=  py 
+        doubleMemoryArray[200]=  pz 
+    end
+
     dico.realm=GetRealmName()
     
-    dico.playerWorldPositionX= px
-    dico.playerWorldPositionY= py
-    dico.playerWorldPositionZ= pz
+    dico.playerWorldPositionX= px  -- World position X : 9876543210001 : -9879.88
+    dico.playerWorldPositionY= py  -- World position X : 9876543210002 : -9879.88
+    dico.playerWorldPositionZ= pz  -- World position X : 9876543210003 : -9879.88
     dico.playerDirectionClockwise= facing
     dico.zoneName= zoneName
     dico.subzoneName= subzoneName
@@ -477,13 +549,13 @@ CustomFunction["GetMetaInfo"]=function()
     local result = ""
 
 
-    JustTest.Time= GetTime() 
-    JustTest.Tick= math.floor( GetTime() / timeTick )
-    JustTest[0]=JustTest.Tick
-    JustTest[1]=dico.gold
-    JustTest[2]=JustTest.Time
+    --JustTest.Time= GetTime() 
+    --JustTest.Tick= math.floor( GetTime() / timeTick )
+    --JustTest[0]=JustTest.Tick
+    --JustTest[1]=dico.gold
+    --JustTest[2]=JustTest.Time
 
-    result= anchorTick
+    result = anchorTick
     result = result.. "Tick Extract:"..(JustTest.Tick) .. "\n"
     result = result.."Time:"..GetTime().."\n"
     local keys = {}
@@ -513,14 +585,15 @@ CustomFunction["GetMetaInfo"]=function()
 
     RefreshTheTickBoundary()
     useAddressTagInjection=tickId%2==0
-    if( useAddressTagInjection)then
+    if MEMO.IsTagMode("Tag") then
         FlushValueBetweenBoundaryToInt(tagInjectionValueTextIndex)
-        SetHasChangedTo(tagInjectionValueMemoryChanged)
+    elseif MEMO.IsTagMode("Index") then
+        SetValueAsIndex()
     else
-         SetMemoryText(result)
-
-         SetHasChangedIncrement(hasChangeIndex)
+        SetMemoryText(result)
     end
+    SetHasChangedIncrement()
+    RefreshAddonStateAndUpdateOnChanged()
     return result
     
 end
