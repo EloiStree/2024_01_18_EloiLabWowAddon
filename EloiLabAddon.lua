@@ -16,7 +16,6 @@
 --##########################################################""--
 
 
-
 --||||||||      ALLOW TO ENABLE PRINTING      |||||||||
 local PrintUtility = {}
 PrintUtility.use=false
@@ -62,6 +61,7 @@ Bools.firstUpdate= true;
 local Strings ={}
 Strings.DevName="Eloi Stree"
 Strings.DebugKeyName="W"
+Strings.ServerID="eu";
 
 
 
@@ -82,6 +82,9 @@ MEMO.GET_METAINFOTEXT=function () return  MEMO_METAINFOTEXT end
 MEMO.GET_PLAYERNOTE=function () return MEMO_PLAYERNOTE end
 MEMO.GET_USEDEBUGAUTORUNTAG=function () return MEMO_DEBUGAUTORUNTAG end
 MEMO.GET_MEMO_CLIPBOARD =function () return MEMO_CLIPBOARD end
+
+MEMO.GET_SERVERID  =function () return MEMO_SERVERID  end
+MEMO.SET_SERVERID =function (value) MEMO_SERVERID =value end
 
 
 MEMO.AppendStartClipboard= function (text)    
@@ -254,6 +257,12 @@ function ClipboardFunction:SetText(text)
         clipFrame:SetText(text)
     end
 end
+function ClipboardFunction:GetText()
+    if clipFrame then
+        return clipFrame:GetText()
+    end
+    return ""
+end
 -- Method to set text in the movable frame
 function ClipboardFunction:AppentTextEnd(text)
     if clipFrame then
@@ -382,9 +391,45 @@ function frame:OnEvent(event, arg1)
         ExitFunction.ResetVar()
         MEMO.SET_MEMO_CLIPBOARD(clipFrame:GetText());
     elseif event == "PLAYER_LOGIN" then
+        Strings.ServerID = MEMO.GET_SERVERID();
+        if(Strings.ServerID ==nil or Strings.ServerID=="") then
+            Strings.ServerID="eu"
+        end
+
+        RunTestLuaText("print('Hoy hey hoy !')")
+        
+        --QuickTestRef.start()
+
+
+
+
+        --Run Macro apparently is block by blizzard don't use.
+        --RunMacroText("/elrtfm")
+        -- this one call macro that the player created in the macro interface
+        --RunMacro("Hello")
     end
 end
 
+
+
+function RunTestLuaText(luaCodeText)
+
+    local luaCodeFunction, errorMessage = loadstring(luaCodeText)
+    if luaCodeFunction then
+        luaCodeFunction()
+    else
+        print("Error in Lua code:", errorMessage)
+    end
+end
+function RunTestLuaTextWithReturn(luaCodeText)
+
+local luaCodeFunction, errorMessage = loadstring(luaCodeText)
+    if luaCodeFunction then
+        return luaCodeFunction()
+    else
+        return ("Error in Lua code:".. errorMessage)
+    end
+end
 
 
 
@@ -397,7 +442,62 @@ end
 
 
 
+MemoryLuaCall={}
 
+MemoryLuaCall.Command=987654321
+MemoryLuaCall.CommandPrevious=987654321
+
+
+CustomLuaCodeIndex={}
+CustomLuaCodeIndex[0]="print('Reset to zero')"
+CustomLuaCodeIndex[1]="RandomRoll(0, 100)"
+CustomLuaCodeIndex[2]="UI OpenAllBags()"
+CustomLuaCodeIndex[3]="UI CloseAllBags() "
+CustomLuaCodeIndex[4]="print('Hello, World 5 LUUUAA! '..GetCurrentMapAreaID () )"
+
+
+--[[
+
+
+FollowUnit("unit")
+
+    LeaveParty() 
+AcceptGroup() - Accept the invitation to party.
+ConfirmReadyCheck(isReady) - Indicate if you are ready or not.
+ConvertToRaid() - Converts party to raid.
+DeclineGroup() - Decline the invitation to a party.
+DoReadyCheck() - Initiate a ready check.
+InviteUnit("name" or "unit") - Invites the specified player to the group you are currently in (added 2.0.0)
+IsInGroup() -
+CameraZoomIn(increment) - Zooms the camera into the viewplane by increment.
+CameraZoomOut(increment) - Zooms the camera out of the viewplane by increment.
+FlipCameraYaw(degrees) - Rotates the camera about the Z-axis by the angle amount specified in degrees.
+NextView() - Cycles forward through the five predefined camera positions.
+PrevView() - Cycles backward through the five predefined camera positions.
+ResetView(index) - Resets the specified (1-5) predefined camera position to its default if it was changed using #SaveView(index).
+SaveView(index) - Replaces the specified (1-5) predefined camera positions with the current camera position.
+SetView(index) - Sets camera position to a specified (1-5) predefined camera position.
+]]
+
+
+
+function RunLuaUnderCatch()
+    if (MemoryLuaCall.Command<1000 and MemoryLuaCall.Command>0) then 
+        RunTestLuaText(CustomLuaCodeIndex[MemoryLuaCall.Command])
+    end
+end
+
+LuaText={}
+LuaText.clipboardtext=""
+function RunLuaEditorTextUnderCatch()
+    LuaText.clipboardtext = ClipboardFunction:GetText();
+    RunTestLuaText(LuaText.clipboardtext)
+    
+end
+
+
+
+--11E70AC8A20
 
 --||||||||    MANAGE CODE IN THE UPDATE FRAME   |||||||||
 
@@ -405,6 +505,13 @@ StaticMetaInfo={}
 StaticMetaInfo.text=""
 function frame:OnUpdate(aElapsed)
     
+
+    if(MemoryLuaCall.Command ~= MemoryLuaCall.CommandPrevious) then
+        MemoryLuaCall.CommandPrevious=MemoryLuaCall.Command
+        print("Command Called:"..MemoryLuaCall.Command)
+        local success, result = pcall(RunLuaUnderCatch)
+    end
+
     if not Bools.addonLoaded then return end
 
     if Bools.firstUpdate then 
@@ -428,17 +535,17 @@ function frame:OnUpdate(aElapsed)
      
     then  
         
-        MemoryFunction.BeforeGetCustomText()
-        StaticMetaInfo.text =CustomFunction:GetMetaInfo() ;
+        --MemoryFunction.BeforeGetCustomText()
+        --StaticMetaInfo.text =CustomFunction:GetMetaInfo() ;
         if StaticMetaInfo.text == nil then
             StaticMetaInfo.text= "Nil returned"
         else 
             --print (metaInfo)
         end
-        MemoryFunction.AfterGetCustomText()
+        --MemoryFunction.AfterGetCustomText()
     end
     
-    print (StaticMetaInfo.text)
+   -- print (StaticMetaInfo.text)
 
     
     DebugMemoryTextFrame:SetTextContent(StaticMetaInfo.text .. "")
@@ -520,6 +627,9 @@ function SlashCmdList.ELOILABLIST(msg)
     print("- /elvalue : Put the value in the memory");
     print("- /elautotagon : While modulo around 4 tag type value");
     print("- /elautotagoff : Stop debug mode (require manual now)");
+    print("- /elserver eu|us|?? : Set the server you are on for link generation");
+    print("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
+    print("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
     print("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
     
 end
@@ -531,6 +641,22 @@ SendMessageUtility.SendMessageToSelf =  function (message)
 end
 
 
+function ExecuteCodeAndPrintResult(code)
+    -- Use pcall to catch errors in the code
+    local success, result = pcall(loadstring(code))
+
+    -- Check if execution was successful
+    if success then
+        -- Print the result
+        return result
+    else
+        -- Print the error message
+        return "Error"
+    end
+end
+
+
+
 SLASH_ELOILABRTFM1 = "/elrtfm";
 function SlashCmdList.ELOILABRTFM(msg)
     ClipboardFunction:SetText("Manual: https://github.com/EloiStree/HelloWarcraftQAXR/issues\n" )
@@ -539,6 +665,30 @@ function SlashCmdList.ELOILABRTFM(msg)
 end
 
 
+
+
+SLASH_ELOILABELOISETUP1 = "/eloisetup";
+function SlashCmdList.ELOILABELOISETUP(msg)
+    QuickTestRef.start()
+end
+
+
+SLASH_ELOILABELOIEDITLUAPRINT1 = "/eluaprintreturn";
+function SlashCmdList.ELOILABELOIEDITLUAPRINT(msg)
+    
+    --print(("Try Start"))
+    print(">"..ExecuteCodeAndPrintResult(ClipboardFunction:GetText()))
+    --print(("Try End"))
+end
+
+
+SLASH_ELOILABELOIEDITLUA1 = "/elua";
+function SlashCmdList.ELOILABELOIEDITLUA(msg)
+    
+    --local success, result = pcall(RunLuaEditorTextUnderCatch)
+    RunLuaEditorTextUnderCatch()
+end
+
 SLASH_ELOILAClIP1 = "/elclip";
 function SlashCmdList.ELOILABClIP(msg)
     ClipboardFunction:SetText(msg)
@@ -546,7 +696,7 @@ end
 
 SLASH_ELOILABMODTAG1 = "/eltag";
 function SlashCmdList.ELOILABMODTAG(msg)
-    print("Is in tag mode")
+    print("Is in tag mode "..tagInjectionGeneric)
     MEMO.SetTagMode("Tag")
 end
 
@@ -647,11 +797,11 @@ PlayerInfo.GetOnMousePlayerInfoAsString = function ()
 end
 
 
-local serverIDFocus="eu"
 SLASH_ELOILABSERVER1 =   "/elserver";
 function SlashCmdList.ELOILABSERVER(msg)
-    serverIDFocus = msg
-end
+    Strings.ServerID = msg
+    MEMO.SET_SERVERID(msg)
+;end
 
 function replaceSpacesWithHyphens(input_text)
     local modified_text = ""
@@ -687,6 +837,9 @@ function trimString(s)
 end
 -- DO LATER MACRO TO SET SERVER
 local localDico={}
+
+
+
 PlayerInfo.GetInfo= function(target)
     local select = UnitName(target)
     if select==nil then return "" end
@@ -694,20 +847,35 @@ PlayerInfo.GetInfo= function(target)
     if( not UnitIsPlayer(target) ) then
         local npcInfoString = "Non-Player Information: "..select.."\n"
         
-        local level = UnitLevel("target") or "Unknown Level"
-        local classification = UnitClassification("target") or "Unknown Classification"
+        local level = UnitLevel(target) or "Unknown Level"
+        local classification = UnitClassification(target) or "Unknown Classification"
         npcInfoString = npcInfoString .. "Level: " .. level .. "\nClassification: " .. classification .. "\n"
         
-        local faction = UnitFactionGroup("target") or "Unknown Faction"
+        local faction = UnitFactionGroup(target) or "Unknown Faction"
         npcInfoString = npcInfoString .. "Faction: " .. faction .. "\n"
         
-        local creatureType = UnitCreatureType("target") or "Unknown Creature Type"
+        local creatureType = UnitCreatureType(target) or "Unknown Creature Type"
         npcInfoString = npcInfoString .. "Creature Type: " .. creatureType
         return npcInfoString.."\n\n"
     end
+
+
+    localDico.targetlevel=UnitLevel(target)
     localDico.mname, localDico.mrealm = UnitName(target)
     localDico.mguildName, _, _, localDico.mrealmGuild = GetGuildInfo(target)
     
+
+
+
+    local guildName, guildRankName, guildRankIndex, _, _, guildLevel, guildExperience, guildMembersOnline, guildMembersTotal, _, guildId, guildAchievementPoints, guildMOTD = GetGuildInfo(target)
+    if guildName then
+        localDico.guildDescription= string.format("Guild:%s (%s |%s)", guildName,guildRankName or "N/A",guildRankIndex or "N/A")
+    else
+        localDico.guildDescription=("Not in a guild.")
+    end
+
+
+
     if localDico.mname==nil then localDico.mname="" end
     if localDico.mrealm==nil then localDico.mrealm="" end
     if localDico.mrealmGuild==nil then  localDico.mrealmGuild="" end
@@ -721,11 +889,7 @@ PlayerInfo.GetInfo= function(target)
         localDico.mrealm=GetRealmName()
     end
 
-    print(localDico.mname )
-    print(localDico.mguildName )
-    print(localDico.mrealm )
-    print(localDico.mrealmGuild )
-    
+   
 
     --- WOO CORRECTION ? I DONT FEEL IT IS MY CODE.
     localDico.mrealm = string.gsub(localDico.mrealm, "LesClairvoyants", "Les-Clairvoyants")
@@ -734,20 +898,28 @@ PlayerInfo.GetInfo= function(target)
 
     -- THIS INFO GENERATE A LINK TO CHECK THE PLAYER AND GUILD INFROMATION ONLINE.
     localDico.mouse_player_url=string.format("https://worldofwarcraft.blizzard.com/en-gb/character/%s/%s/%s "
-    ,serverIDFocus , localDico.mrealm , localDico.mname)
+    ,Strings.ServerID , localDico.mrealm , localDico.mname)
     localDico.mouse_player_url = (replaceSpacesWithHyphens(trimString(localDico.mouse_player_url)))
 
+    localDico.mouse_player_raidio_url=string.format("https://raider.io/characters/%s/%s/%s"
+    ,Strings.ServerID , localDico.mrealm , localDico.mname)
+    localDico.mouse_player_raidio_url = (replaceSpacesWithHyphens(trimString(localDico.mouse_player_raidio_url)))
+
     localDico.mouse_guild_url=string.format("https://worldofwarcraft.blizzard.com/en-gb/guild/%s/%s/%s",
-    serverIDFocus 
+    Strings.ServerID 
     , localDico.mrealmGuild ,
      localDico.mguildName)
 
      localDico.mouse_guild_url= (replaceSpacesWithHyphens(trimString(localDico.mouse_guild_url)))
-
-    return string.format("%s\n%s\n%s\n%s\n\n",
-    localDico.mname,localDico.mrealm,
+localDico.whisper = string.format("/w %s-%s",localDico.mname,localDico.mrealm)
+    return string.format("%s | %s %s\n%s\n%s\n%s\n%s\n%s\n\n",
+    localDico.mname,localDico.mrealm,localDico.targetlevel,
+    localDico.guildDescription,
     localDico.mouse_player_url,
-    localDico.mouse_guild_url)
+    localDico.mouse_player_raidio_url,
+    localDico.mouse_guild_url,
+    localDico.whisper
+)
 
 end
 
