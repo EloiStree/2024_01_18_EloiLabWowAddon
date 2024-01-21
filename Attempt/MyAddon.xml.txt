@@ -1,0 +1,30 @@
+<!-- MyAddon.xml -->
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
+    <Frame name="MyAddonFrame" parent="UIParent" hidden="false" movable="true" clampedToScreen="true" toplevel="true" frameStrata="DIALOG">
+        <!-- Use the Image stored at Interface\AddOns\EloiLab\Image\RTFM -->
+        <Texture name="MyAddonImage" parent="MyAddonFrame" file="Interface\AddOns\EloiLab\Image\RTFM" setAllPoints="true" />
+
+        <FontString name="MyAddonLink" parent="MyAddonFrame" inherits="GameFontHighlight" text="Copy this link" justifyH="LEFT" justifyV="TOP" setAllPoints="true" hyperlinksEnabled="true">
+            <Scripts>
+                <OnHyperlinkClick>
+                    self, linkData, link, button -> MyAddon:OnLinkClick(linkData, link, button)
+                </OnHyperlinkClick>
+            </Scripts>
+        </FontString>
+
+        <FontString name="MyAddonText" parent="MyAddonFrame" inherits="GameFontHighlight" text="Time: 00:00:00" justifyH="LEFT" justifyV="TOP" setAllPoints="true" />
+
+        <Button name="MyAddonCloseButton" parent="MyAddonFrame" inherits="UIPanelCloseButton" frameLevel="8" />
+
+        <EditBox name="MyAddonNoteInput" parent="MyAddonFrame" inherits="InputBoxTemplate" autoFocus="false" fontObject="GameFontHighlight">
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="MyAddonFrame" relativePoint="TOPLEFT" x="20" y="-150" />
+            </Anchors>
+            <Scripts>
+                <OnEnterPressed>
+                    self -> MyAddon:SaveNote(self:GetText())
+                </OnEnterPressed>
+            </Scripts>
+        </EditBox>
+    </Frame>
+</Ui>

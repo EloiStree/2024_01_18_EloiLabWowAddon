@@ -1,0 +1,225 @@
+--Tutorial to learn ADDON: https://youtu.be/nfaE7NQhMlc?list=PL3wt7cLYn4N-3D3PTTUZBM2t1exFmoA2G
+
+-- Define a saved variable for your addon
+EloiLabDB = {}
+
+EloiLabDB.enabled = true
+EloiLabDB.statictext = "Default export text"
+
+
+local function helloWorld(saySomething , ...)
+
+
+    --stack vs queue
+
+
+    --self store a ref to the current table he is in
+
+    local option_stack={
+        push= function(self, arg)
+            local n =#self;
+            self[n+1]=arg;
+        end,
+
+        pop = function (self)
+            local n =#self;
+            if(n>0) then
+                local rtn = self[n];
+                self[n]=nil
+                return rtn;
+
+            end
+        end,
+    }
+
+
+    -- options.pop(option) will add it self
+    -- options:pop() will directly add a self
+
+    print(option_stack:pop()); -- print nothing
+    option_stack:push(5);
+    option_stack:push("Eloi";
+    option_stack:push({"a","b","c"});
+    print(option_stack:pop()); -- print the last element added 
+    print(option_stack:pop()); -- print the last element added 
+    print(option_stack:pop()); -- print the last element added 
+    print(option_stack:pop()); -- print the last element added 
+
+    longString =[[
+    that  a long string
+    ha ha
+
+    ]]
+
+    --[[
+        Some commentary on several line
+
+        startTime =5;
+        EndValue=8;
+        stepValue=1;
+        for startValue, EndValue, stepBalue do
+            --print()
+        end 
+    ]]
+    
+    -- Same stuff but different
+    for i=1,i<=10, 1 do
+        print(i)
+    end    
+    
+    for i=1,i<=10 do
+        print(i)
+    end
+
+    for i=1,10 do
+        print(i)
+    end
+
+
+
+    local tbl ={
+        "hi",4 ,5 ,6,"bou",
+
+        ["hash1"]=100,
+        ["hash2"]=200,
+        ["hash3"]=300,
+        ["hash4"]=400,
+        hash5=500,
+    }
+
+    -- same but with variant.
+    for key, value in next, tbl, do
+        print(key.." : "..value);
+    end
+
+    for key, value in ipairs(tbl) do
+        print(key.." : "..value);
+    end
+    -- 
+    for key, value in pairs(tbl) do
+        print(key.." : "..value);
+    end
+
+    print(next(tbl))
+    print(next(tbl,2)) -- print the second of the hash table
+    -- next and pair are not the same (bit different)
+    -- ipairs are the array with index as key
+
+    
+    --while
+    condition =false;
+    while condition do
+    
+
+    end
+
+    --do while
+    local i=0
+    repeat
+        i=i+1
+        print(i)
+
+    until condition
+
+
+    -- in lua
+    -- no switch
+    -- no continue
+      -- but break exist
+
+      
+
+
+
+    local aTable ={...} --create a table with given argument
+    print(#aTable);
+    print(#{...}); --# is the lenght of the list
+    --# only work on the array and not the hashtable
+    local v2 ={1,2}
+    local v3 ={1,2,3}
+    local q4 ={1,2,3,4}
+
+    print(aTable[10]) -- will print nil if not element
+
+    --array + hashtable
+    aTable[10]=5;
+    aTable["SizeKey"]=10;
+
+    local bTable ={
+        -- add to the array
+        1,2,3,4
+
+        -- add to the hash table 
+        ["name"]="Eloi",
+        ["age"]="34",
+        ["color"]= {r=0.5,g=0.2, b=0.5, a=1},
+        class = "Warrior",
+    }
+
+    print(bTable["size"]);
+    print(bTable.class);
+
+
+    local _,_, thridVar =...
+    local f = select(1,...)
+    thridVar= thridVar or "_"
+    f= f or "_"
+    print(thridVar..'-'..f.." len(".. ..")");
+    print("Hello There ".. UnitName("player")..":)")
+    saySomething = saySomething or "Yo !";
+    print(saySomething)
+    --Give default if nil possible
+end
+
+helloWorld("Comment ça va ?");
+helloWorld();
+
+
+function EloiLab_GetStaticText()
+    return EloiLabDB.statictext
+end
+
+function EloiLab_SetStaticText(text)
+    EloiLabDB.statictext = text
+end
+
+
+
+
+----------------------------
+
+
+
+--[[
+local frame = CreateFrame("Frame", "Eloi Lab Frame")
+frame:RegisterEvent("PLAYER_LOGIN")
+
+-- Event handler
+function frame:OnEvent(event, arg1, ...)
+    if event == "PLAYER_LOGIN" then
+        -- Your code to be executed on player login
+        print("Hello, WoW!")
+
+        -- Create a FontString to display static text on the frame
+        local welcomeText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        welcomeText:SetText("Eloi Lab Hello World !")
+        welcomeText:SetPoint("TOP", UIParent, "TOP", 0, -50)
+
+        -- Create a FontString to display the updating counter
+        local counterText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        counterText:SetText("Counter: 0")
+        counterText:SetPoint("TOP", welcomeText, "BOTTOM", 0, -10)
+
+        -- Set up OnUpdate handler for the counter
+        local counter = 0
+        frame:SetScript("OnUpdate", function(self, elapsed)
+            counter = counter + 1
+            counterText:SetText("Counter: " .. counter.."/" ..string.format("%.2f", counter / MAX_INT ))
+        end)
+    end
+end
+
+-- Set up event handling
+frame:SetScript("OnEvent", frame.OnEvent)
+
+]]

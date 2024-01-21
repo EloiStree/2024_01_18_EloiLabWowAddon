@@ -43,7 +43,6 @@ end
 
 
 
-
 local Ints={}
 Ints.framecount = 0
 
@@ -76,31 +75,59 @@ MEMO.IS_ADDONLOADED= function() return Bools.addonLoaded end
 MEMO.SET_WINDOWOPEN=function (value)  MEMO_PLAYERNOTE=value end
 MEMO.SET_METAINFOTEXT=function (value) MEMO_METAINFOTEXT=value end
 MEMO.SET_PLAYERNOTE=function (value) MEMO_PLAYERNOTE=value end
+MEMO.SET_USEDEBUGAUTORUNTAG=function (value)  MEMO_DEBUGAUTORUNTAG=value end
+MEMO.SET_MEMO_CLIPBOARD =function (value)  MEMO_CLIPBOARD=value end
 MEMO.GET_WINDOWOPEN=function () return MEMO_PLAYERNOTE end
 MEMO.GET_METAINFOTEXT=function () return  MEMO_METAINFOTEXT end
 MEMO.GET_PLAYERNOTE=function () return MEMO_PLAYERNOTE end
+MEMO.GET_USEDEBUGAUTORUNTAG=function () return MEMO_DEBUGAUTORUNTAG end
+MEMO.GET_MEMO_CLIPBOARD =function () return MEMO_CLIPBOARD end
+
+
+MEMO.AppendStartClipboard= function (text)    
+    MEMO_CLIPBOARD = text..MEMO_CLIPBOARD
+end
+
+MEMO.AppendEndClipboard= function (text)
+    MEMO_CLIPBOARD = MEMO_CLIPBOARD..text
+end
+
+MEMO.SetClipboard= function (text)
+    MEMO_CLIPBOARD =text 
+end
+
+MEMO.ClearClipboard= function ()
+    MEMO_CLIPBOARD =""
+end
+
 
 MEMO.SetTagMode =function (modeId) 
-    if modeId == "Tag" or modeId==0 or modeId=="t"or modeId=="T" then
+    if modeId == "Tag" or modeId==0 then
         MEMO_TAGMODE =0
     end  
-    if modeId == "Index" or modeId==1  or modeId=="i"or modeId=="i"then
+    if modeId == "Type" or modeId==1  then
         MEMO_TAGMODE =1
     end   
-     if modeId == "Value" or modeId==2  or modeId=="v"or modeId=="v"then
+    if modeId == "Index" or modeId==2 then
         MEMO_TAGMODE =2
+    end 
+      if modeId == "Value" or modeId==3 then
+        MEMO_TAGMODE =3
     end
 end
 MEMO.IsTagMode =function (modeId) 
     if(modeId==nil or MEMO_TAGMODE==next) then return false end
-    if modeId == "Tag" or modeId==0 or modeId=="t"or modeId=="T" then
+    if modeId == "Tag" or modeId==0  then
         return MEMO_TAGMODE ==0
     end  
-    if modeId == "Index" or modeId==1  or modeId=="i"or modeId=="i"then
+    if modeId == "Type" or modeId==1 then
         return MEMO_TAGMODE ==1
     end   
-     if modeId == "Value" or modeId==2  or modeId=="v"or modeId=="v"then
+    if modeId == "Value" or modeId==2  then
         return MEMO_TAGMODE ==2
+    end
+    if modeId == "Value" or modeId==3 then
+        return MEMO_TAGMODE ==3
     end
     return false
 end
@@ -181,17 +208,78 @@ end
 
 
 
+
+--||||||| CLIP BOARD FRAME@@@@@@@@@@@@@@@@@@@@
+ClipboardFunction={}
+
+ -- Create the frame
+ clipFrame = CreateFrame("Frame", "ClipFrame", UIParent)
+
+ clipFrame:SetMovable(true)
+ clipFrame:EnableMouse(true)
+ clipFrame:RegisterForDrag("LeftButton")
+ clipFrame:SetScript("OnDragStart", clipFrame.StartMoving)
+ clipFrame:SetScript("OnDragStop", clipFrame.StopMovingOrSizing)
+
+    
+
+ -- Add an EditBox to the frame for text input
+ clipFrame.editBox = CreateFrame("EditBox", nil, clipFrame)
+ clipFrame.editBox:SetAllPoints(true)
+ clipFrame.editBox:SetMultiLine(true)
+ clipFrame.editBox:SetAutoFocus(false)
+ clipFrame.editBox:SetFontObject(ChatFontNormal)
+ clipFrame.editBox:SetScript("OnEscapePressed", function() clipFrame:Hide() end)
+
+-- Function to set text in the EditBox
+clipFrame.SetText = function(self, text)
+    self.editBox:SetText(text)
+end
+
+clipFrame.GetText = function(self)
+    return self.editBox:GetText()
+end
+
+-- Function to show the movable frame
+function ClipboardFunction:ShowMovableFrame()
+    if not clipFrame then
+        ClipboardFunction:CreateMovableFrame()
+    end
+    clipFrame:Show()
+end
+
+-- Method to set text in the movable frame
+function ClipboardFunction:SetText(text)
+    if clipFrame then
+        clipFrame:SetText(text)
+    end
+end
+-- Method to set text in the movable frame
+function ClipboardFunction:AppentTextEnd(text)
+    if clipFrame then
+        clipFrame:SetText(clipFrame:GetText().. text)
+    end
+end
+-- Method to set text in the movable frame
+function ClipboardFunction:AppentTextStart(text)
+    if clipFrame then
+        clipFrame:SetText(text ..clipFrame:GetText())
+    end
+end
+
+
+
+
+
 --||||||||     CREATE THE FRAME       |||||||||
 
 -- Create the DebugMemoryTextFrame frame
 local DebugMemoryTextFrame = CreateFrame("Frame", "DebugMemoryTextFrame", UIParent)
-DebugMemoryTextFrame:SetSize(UIParent:GetWidth() * 0.2, UIParent:GetHeight())
-DebugMemoryTextFrame:SetPoint("LEFT", 0, 0)
 
 -- Create a scroll frame to support scrolling for long texts
 local ScrollFrame = CreateFrame("ScrollFrame", "DebugMemoryTextScrollFrame", DebugMemoryTextFrame, "UIPanelScrollFrameTemplate")
-ScrollFrame:SetPoint("TOPLEFT", DebugMemoryTextFrame, "TOPLEFT", 0, 0)
-ScrollFrame:SetPoint("BOTTOMRIGHT", DebugMemoryTextFrame, "BOTTOMRIGHT", 0, 0)
+
+
 
 
 
@@ -200,8 +288,6 @@ local EditBox = CreateFrame("EditBox", "DebugMemoryTextEditBox", ScrollFrame)
 EditBox:SetMultiLine(true)
 EditBox:SetAutoFocus(false)
 EditBox:SetFontObject(ChatFontNormal)
-EditBox:SetWidth(ScrollFrame:GetWidth() - 20)
-EditBox:SetHeight(ScrollFrame:GetHeight())
 EditBox:SetScript("OnEscapePressed", function() DebugMemoryTextFrame:Hide() end)
 
 -- Set the scroll frame content
@@ -242,8 +328,26 @@ frame:RegisterEvent('CINEMATIC_START')
 frame:RegisterEvent('CINEMATIC_STOP')
 
 
-function frame:OnEvent(event, arg1)
 
+function UpdateFramesPosition()
+
+    
+
+    DebugMemoryTextFrame:SetSize(UIParent:GetWidth() * 0.2, UIParent:GetHeight())
+    DebugMemoryTextFrame:SetPoint("LEFT", 0, 0)
+    ScrollFrame:SetPoint("TOPLEFT", DebugMemoryTextFrame, "TOPLEFT", 0, 0)
+    ScrollFrame:SetPoint("BOTTOMRIGHT", DebugMemoryTextFrame, "BOTTOMRIGHT", 0, 0)
+    EditBox:SetWidth(ScrollFrame:GetWidth() - 20)
+    EditBox:SetHeight(ScrollFrame:GetHeight()) 
+    clipFrame:SetSize(UIParent:GetWidth() * 0.20, UIParent:GetHeight()*0.05)
+    clipFrame:SetPoint("TOPLEFT", UIParent:GetWidth() * 0.22, 0)
+
+end
+
+
+
+function frame:OnEvent(event, arg1)
+    UpdateFramesPosition()
     if Bools.toggle_OnEventDebugLog then
         print("Event:".. (event or ""))
         print("Arg1:".. (arg1 or ""))
@@ -254,7 +358,15 @@ function frame:OnEvent(event, arg1)
     --||||||||     WHEN PLAYER RELOAD      |||||||||
     if event == "ADDON_LOADED" and arg1 == "EloiLab" then
         print("> Eloi Lab info: /elhelp ")
-        print("> SavedVar__   Static__")
+        print("> How to use ? /elrtfm")
+        print("> This tool is for educational purpose")
+        print("> Use it is against TOS")
+        print("> YOU ARE GOING TO BE BAN FOR USING IT: DON'T.")
+        print("= But if you do, Have fun learning :)-")
+            
+        
+
+        
         Bools.addonLoaded=true
         --MEMO.PrintALL()
 
@@ -262,10 +374,13 @@ function frame:OnEvent(event, arg1)
         textInMemory = textInMemory or ""
         MainPurpose.SetTextInStaticMemory(textInMemory)
         
+        clipFrame:SetText(MEMO.GET_MEMO_CLIPBOARD())
+        
 
     elseif event == "PLAYER_LOGOUT" then
         MainPurpose.SetTextInStaticMemory( StaticAddress.GetStaticText())
         ExitFunction.ResetVar()
+        MEMO.SET_MEMO_CLIPBOARD(clipFrame:GetText());
     elseif event == "PLAYER_LOGIN" then
     end
 end
@@ -286,7 +401,8 @@ end
 
 --||||||||    MANAGE CODE IN THE UPDATE FRAME   |||||||||
 
-
+StaticMetaInfo={}
+StaticMetaInfo.text=""
 function frame:OnUpdate(aElapsed)
     
     if not Bools.addonLoaded then return end
@@ -299,11 +415,35 @@ function frame:OnUpdate(aElapsed)
         DebugMemoryTextFrame:ShowFrameOnOff(Bools.currentWindowOpenRequest)
     end
     Ints.framecount=Ints.framecount+1
-    local metaInfo =CustomFunction.GetMetaInfo() ;
     
-    MainPurpose.SetTextInStaticMemory(CustomFunction.GetMetaInfo())
-    DebugMemoryTextFrame:SetTextContent(metaInfo)
+    StaticMetaInfo.text="None "..GetTime()
+    -- WAIT THAT OTHER SCRIPT ARE LOADED BEFORE USING ARRAY
+    if 
+        true
+        --type(MemoryFunction)=="Table" 
+        --and type(CustomFunction)=="Table" 
+        --and type(CustomFunction.GetMetaInfo)=="function" 
+        --and type(MemoryFunction.BeforeGetCustomText)=="function" 
+        --and type(MemoryFunction.AfterGetCustomText)=="function" 
+     
+    then  
+        
+        MemoryFunction.BeforeGetCustomText()
+        StaticMetaInfo.text =CustomFunction:GetMetaInfo() ;
+        if StaticMetaInfo.text == nil then
+            StaticMetaInfo.text= "Nil returned"
+        else 
+            --print (metaInfo)
+        end
+        MemoryFunction.AfterGetCustomText()
+    end
+    
+    print (StaticMetaInfo.text)
 
+    
+    DebugMemoryTextFrame:SetTextContent(StaticMetaInfo.text .. "")
+    --ClipboardFunction:SetText(metaInfo .. "")
+    --MainPurpose.SetTextInStaticMemory(metaInfo .. "")
 
     
     --||||||||    KEY MANAGEMENT  |||||||||
@@ -376,23 +516,57 @@ function SlashCmdList.ELOILABLIST(msg)
     print("- /elstop : Stop to work and need start to continue after reload");
     print("- /eltag : Put that address tag in the memory");
     print("- /elindex : Put the index Tag in the memory");
+    print("- /eltype : Put the type in the memory");
     print("- /elvalue : Put the value in the memory");
+    print("- /elautotagon : While modulo around 4 tag type value");
+    print("- /elautotagoff : Stop debug mode (require manual now)");
+    print("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
+    
 end
 
+SendMessageUtility={}
+SendMessageUtility.SendMessageToSelf =  function (message)
+   
+    SendChatMessage(message, "GUILD", nil, UnitName("player"))
+end
+
+
+SLASH_ELOILABRTFM1 = "/elrtfm";
+function SlashCmdList.ELOILABRTFM(msg)
+    ClipboardFunction:SetText("Manual: https://github.com/EloiStree/HelloWarcraftQAXR/issues\n" )
+    ClipboardFunction:AppentTextEnd("Code Addons: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon\n")
+    ClipboardFunction:AppentTextEnd("Code Memory Reader: https://github.com/EloiStree/2023_12_31_ReadMemoryOfWow\n")
+end
+
+
+SLASH_ELOILAClIP1 = "/elclip";
+function SlashCmdList.ELOILABClIP(msg)
+    ClipboardFunction:SetText(msg)
+end
 
 SLASH_ELOILABMODTAG1 = "/eltag";
 function SlashCmdList.ELOILABMODTAG(msg)
+    print("Is in tag mode")
     MEMO.SetTagMode("Tag")
 end
 
+
 SLASH_ELOILABMODINDEX1 = "/elindex";
 function SlashCmdList.ELOILABMODINDEX(msg)
+    print("Is in index mode")
     MEMO.SetTagMode("Index")
 end
 
 SLASH_ELOILABMODVALUE1 = "/elvalue";
 function SlashCmdList.ELOILABMODVALUE(msg)
+    print("Is in value mode")
     MEMO.SetTagMode("Value")
+end
+
+SLASH_ELOILABMODTYPE1 = "/eltype";
+function SlashCmdList.ELOILABMODTYPE(msg)
+    print("Is in type mode")
+    MEMO.SetTagMode("Type")
 end
 
 
@@ -434,6 +608,148 @@ function SlashCmdList.ELOILABOFF(msg)
 end
 
 
+SLASH_ELOILABUTOTAGON1 = "/elautotagon";
+function SlashCmdList.ELOILABUTOTAGON(msg)
+    print("Auto Tag loop On");
+    MEMO.SET_USEDEBUGAUTORUNTAG(true)
+end
+
+SLASH_ELOILABTAGOFF1 =   "/elautotagoff";
+function SlashCmdList.ELOILABTAGOFF(msg)
+    print("Auto Tag loop Off");
+    MEMO.SET_USEDEBUGAUTORUNTAG(false)
+end
+
+
+
+SLASH_ELOILABPLAYERINFO1 =   "/elplayerinfo";
+function SlashCmdList.ELOILABPLAYERINFO(msg)
+
+    ClipboardFunction:SetText(PlayerInfo.GetFocusPlayerAsString())
+    ClipboardFunction:AppentTextEnd(PlayerInfo.GetOnMousePlayerInfoAsString())
+end
+
+SLASH_ELOILABPLAYERINFOAPP1 =   "/elplayerinfoappend";
+function SlashCmdList.ELOILABPLAYERINFOAPP(msg)
+
+    ClipboardFunction:AppentTextEnd(PlayerInfo.GetFocusPlayerAsString())
+    ClipboardFunction:AppentTextEnd(PlayerInfo.GetOnMousePlayerInfoAsString())
+end
+
+PlayerInfo = {}
+PlayerInfo.GetFocusPlayerAsString = function ()
+    return PlayerInfo.GetInfo("target")
+     
+end
+
+PlayerInfo.GetOnMousePlayerInfoAsString = function ()
+    return PlayerInfo.GetInfo("mouseover")
+end
+
+
+local serverIDFocus="eu"
+SLASH_ELOILABSERVER1 =   "/elserver";
+function SlashCmdList.ELOILABSERVER(msg)
+    serverIDFocus = msg
+end
+
+function replaceSpacesWithHyphens(input_text)
+    local modified_text = ""
+
+    for i = 1, #input_text do
+        local char = input_text:sub(i, i)
+        if char == " " then
+            modified_text = modified_text .. "-"
+        else
+            modified_text = modified_text .. char
+        end
+    end
+
+    return modified_text
+end
+
+function trimString(s)
+    local start = 1
+    local finish = #s
+
+    -- Find the start index without leading whitespaces
+    while start <= #s and s:sub(start, start) == ' ' do
+        start = start + 1
+    end
+
+    -- Find the end index without trailing whitespaces
+    while finish >= 1 and s:sub(finish, finish) == ' ' do
+        finish = finish - 1
+    end
+
+    -- Return the trimmed substring
+    return s:sub(start, finish)
+end
+-- DO LATER MACRO TO SET SERVER
+local localDico={}
+PlayerInfo.GetInfo= function(target)
+    local select = UnitName(target)
+    if select==nil then return "" end
+
+    if( not UnitIsPlayer(target) ) then
+        local npcInfoString = "Non-Player Information: "..select.."\n"
+        
+        local level = UnitLevel("target") or "Unknown Level"
+        local classification = UnitClassification("target") or "Unknown Classification"
+        npcInfoString = npcInfoString .. "Level: " .. level .. "\nClassification: " .. classification .. "\n"
+        
+        local faction = UnitFactionGroup("target") or "Unknown Faction"
+        npcInfoString = npcInfoString .. "Faction: " .. faction .. "\n"
+        
+        local creatureType = UnitCreatureType("target") or "Unknown Creature Type"
+        npcInfoString = npcInfoString .. "Creature Type: " .. creatureType
+        return npcInfoString.."\n\n"
+    end
+    localDico.mname, localDico.mrealm = UnitName(target)
+    localDico.mguildName, _, _, localDico.mrealmGuild = GetGuildInfo(target)
+    
+    if localDico.mname==nil then localDico.mname="" end
+    if localDico.mrealm==nil then localDico.mrealm="" end
+    if localDico.mrealmGuild==nil then  localDico.mrealmGuild="" end
+    if localDico.mguildName==nil then localDico.mguildName="" end
+    
+
+    if  localDico.mrealmGuild==nil or #localDico.mrealmGuild ==0 then
+        localDico.mrealmGuild=GetRealmName()
+    end
+    if  localDico.mrealm==nil or #localDico.mrealm==0 then
+        localDico.mrealm=GetRealmName()
+    end
+
+    print(localDico.mname )
+    print(localDico.mguildName )
+    print(localDico.mrealm )
+    print(localDico.mrealmGuild )
+    
+
+    --- WOO CORRECTION ? I DONT FEEL IT IS MY CODE.
+    localDico.mrealm = string.gsub(localDico.mrealm, "LesClairvoyants", "Les-Clairvoyants")
+
+    
+
+    -- THIS INFO GENERATE A LINK TO CHECK THE PLAYER AND GUILD INFROMATION ONLINE.
+    localDico.mouse_player_url=string.format("https://worldofwarcraft.blizzard.com/en-gb/character/%s/%s/%s "
+    ,serverIDFocus , localDico.mrealm , localDico.mname)
+    localDico.mouse_player_url = (replaceSpacesWithHyphens(trimString(localDico.mouse_player_url)))
+
+    localDico.mouse_guild_url=string.format("https://worldofwarcraft.blizzard.com/en-gb/guild/%s/%s/%s",
+    serverIDFocus 
+    , localDico.mrealmGuild ,
+     localDico.mguildName)
+
+     localDico.mouse_guild_url= (replaceSpacesWithHyphens(trimString(localDico.mouse_guild_url)))
+
+    return string.format("%s\n%s\n%s\n%s\n\n",
+    localDico.mname,localDico.mrealm,
+    localDico.mouse_player_url,
+    localDico.mouse_guild_url)
+
+end
 
 
 

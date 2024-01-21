@@ -1,4 +1,4 @@
-tickModulo=3
+tickModulo=4
 tickRangeInSecond=6
 tickId=1
 maxtextvalue =4000
@@ -6,10 +6,42 @@ TextInMemory = {}
 
 
 useAddressTagInjection=true;
-tagInjectionValueTextIndex=250100000000
-tagInjectionValueMemoryChanged=250100000001
-tagInjectionValueDoubleArray = 9876543210000 
-tagInjectionAddonState = 123454321 
+local tagInjectionGeneric=1231231
+
+
+
+
+-- '0': return "Tag";
+-- '1': return "Type";
+-- '2': return "Index";
+-- '3': return "Value";
+
+
+-- Tag mode type ID
+--// TAG Index Type Value
+--// Tyoe=0 Reserver for later
+--// Tyoe=1 Reserver for later
+--// Tyoe=2 Reserver for later
+--// Type=3 OnChange RandomValue 54645  // This address change every time a value changed. 
+--// Type=4 Addons State Value  99990000012  // Value that allow 
+--// Type=5 Double  546541681814684618
+--// Type=6 DummyBoolean // True or false store in a double losing lot's of space 000000000001
+--// Type=7 BitBoolean // A double where every 1 0 are boolean  10100101
+--// Type=8 Type_8_Bit0To9 // A double where every 0-9 are short value between 0-9   21646103
+--// Type=9 Double Five Char 0.1234567812345678
+--//                  0.255255255255255 
+--// Type=10N = Custom value in double to be parse by other developers
+
+local Type_0_Unkown=0
+local Type_1_Char=1
+local Type_2_Unkown=2
+local Type_3_OnChanged=3
+local Type_4_AddonsState=4
+local Type_5_DoubleValue=5
+local Type_6_DummyBoolean=6
+local Type_7_BitBoolean=7
+local Type_8_Bit0To9=8
+local Type_9_FiveCharInDouble=9
 
 tagAddonState =0
 
@@ -25,15 +57,19 @@ function  RefreshAddonStateAndUpdateOnChanged()
 
     -- If 0000001 index 0000002 value   00000 tag mode
     if MEMO.IsTagMode("Tag") then
-        AddonStateInMemory[0]=123454320
+        AddonStateInMemory[0]=tagInjectionGeneric
+    else if MEMO.IsTagMode("Type") then 
+        AddonStateInMemory[0]=Type_4_AddonsState
     else
         local value = ((GetTime()*1000)%1000)*1000000000
         
         if MEMO.IsTagMode(1) then 
-            value= value+1
-        elseif MEMO.IsTagMode(2) then 
             value= value+2
-        else end
+        elseif MEMO.IsTagMode(2) then 
+            value= value+3
+        else
+        
+        end
 
         if MEMO.GET_WINDOWOPEN() then 
             value= value + 10
@@ -41,6 +77,7 @@ function  RefreshAddonStateAndUpdateOnChanged()
         AddonStateInMemory[0]=value
     end
 
+    end
 end
 
 
@@ -48,7 +85,10 @@ function SetHasChangedTo(randomUniqueNumber)
     TextInMemory[1]=randomUniqueNumber
 end
 function SetHasChangedToTag()
-    TextInMemory[1]=tagInjectionValueMemoryChanged
+    TextInMemory[1]=tagInjectionGeneric
+end
+function SetHasChangedToType()
+    TextInMemory[1]=Type_3_OnChanged
 end
 
 local hasChangedIndex=0
@@ -64,16 +104,15 @@ function RefreshTheTickBoundary()
 
     tickId =math.floor((time/tickRangeInSecond)%tickModulo)
 
-    if tickId==0 then MEMO.SetTagMode("Tag") 
-    elseif tickId==1 then  MEMO.SetTagMode("Index") 
-    else  MEMO.SetTagMode("Value")  end
+    if(MEMO.GET_USEDEBUGAUTORUNTAG()) then 
+        if tickId==0 then MEMO.SetTagMode("Tag") 
+        elseif tickId==1 then  MEMO.SetTagMode("Index") 
+        elseif tickId==2 then  MEMO.SetTagMode("Type") 
+        else  MEMO.SetTagMode("Value")  end
+    end
 
-
-
-    TextInMemory[0]= 12345600 + tickId --startTickDynamic
     TextInMemory[1]= 0 -- Value used to check if the memory changed 
     FlushValueBetweenBoundary()
-    TextInMemory[maxtextvalue+1]= 65432100 + tickId --stopTickDynamic
 end
 function FlushValueBetweenBoundary()
     for i=2,maxtextvalue do
@@ -134,10 +173,13 @@ JustTest.Time=0
 JustTest.Tick=0
 
 
-CustomFunction={}
-
-
+OnChangedArray={}
+OnChangedArray.changingValue=0
 doubleMemoryArray ={}
+
+
+
+CustomFunction={}
 dico = {    }
 
 CustomFunction["GetMetaInfo"]=function()    
@@ -178,9 +220,9 @@ CustomFunction["GetMetaInfo"]=function()
     local facing =isDonjon and 0 or GetPlayerFacing()/(2.0*3.1418)
   
     if MEMO.IsTagMode("Tag") then
-        doubleMemoryArray[0]= tagInjectionValueDoubleArray  -- World position X : 9876543210001 : -9879.88
-        doubleMemoryArray[1]= tagInjectionValueDoubleArray  -- World position Y : 9876543210002 : -3.88
-        doubleMemoryArray[200]= tagInjectionValueDoubleArray  -- World position Z : 9876543210003 : -6579.88
+        doubleMemoryArray[0]= tagInjectionGeneric  -- World position X : 9876543210001 : -9879.88
+        doubleMemoryArray[1]= tagInjectionGeneric  -- World position Y : 9876543210002 : -3.88
+        doubleMemoryArray[200]= tagInjectionGeneric  -- World position Z : 9876543210003 : -6579.88
     
     elseif MEMO.IsTagMode("Index") then
         doubleMemoryArray[0]=  0
@@ -586,7 +628,7 @@ CustomFunction["GetMetaInfo"]=function()
     RefreshTheTickBoundary()
     useAddressTagInjection=tickId%2==0
     if MEMO.IsTagMode("Tag") then
-        FlushValueBetweenBoundaryToInt(tagInjectionValueTextIndex)
+        FlushValueBetweenBoundaryToInt(tagInjectionGeneric)
     elseif MEMO.IsTagMode("Index") then
         SetValueAsIndex()
     else

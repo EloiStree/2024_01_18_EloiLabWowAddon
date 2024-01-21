@@ -1,0 +1,647 @@
+tickModulo=4
+tickRangeInSecond=6
+tickId=1
+maxtextvalue =4000
+TextInMemory = {}
+
+
+useAddressTagInjection=true;
+local tagInjectionGeneric=1231231
+
+
+
+
+-- '0': return "Tag";
+-- '1': return "Type";
+-- '2': return "Index";
+-- '3': return "Value";
+
+
+-- Tag mode type ID
+--// TAG Index Type Value
+--// Tyoe=0 Reserver for later
+--// Tyoe=1 Reserver for later
+--// Tyoe=2 Reserver for later
+--// Type=3 OnChange RandomValue 54645  // This address change every time a value changed. 
+--// Type=4 Addons State Value  99990000012  // Value that allow 
+--// Type=5 Double  546541681814684618
+--// Type=6 DummyBoolean // True or false store in a double losing lot's of space 000000000001
+--// Type=7 BitBoolean // A double where every 1 0 are boolean  10100101
+--// Type=8 Type_8_Bit0To9 // A double where every 0-9 are short value between 0-9   21646103
+--// Type=9 Double Five Char 0.1234567812345678
+--//                  0.255255255255255 
+--// Type=10N = Custom value in double to be parse by other developers
+
+local Type_0_Unkown=0
+local Type_1_Char=1
+local Type_2_Unkown=2
+local Type_3_OnChanged=3
+local Type_4_AddonsState=4
+local Type_5_DoubleValue=5
+local Type_6_DummyBoolean=6
+local Type_7_BitBoolean=7
+local Type_8_Bit0To9=8
+local Type_9_FiveCharInDouble=9
+
+tagAddonState =0
+
+AddonStateInMemory = {}
+AddonStateInMemory[0]=0
+
+
+function  RefreshAddonStateAndUpdateOnChanged() 
+    -- We want to minimize the time in cheat engine.
+    -- So I want a address for the OnValueChange and some info about the addon.
+    -- 111100000000 1111 are the value on changed 00000000 are 0-9 value represnting addon state 
+    
+
+    -- If 0000001 index 0000002 value   00000 tag mode
+    if MEMO.IsTagMode("Tag") then
+        AddonStateInMemory[0]=tagInjectionGeneric
+    else if MEMO.IsTagMode("Type") then 
+        AddonStateInMemory[0]=Type_4_AddonsState
+    else
+        local value = ((GetTime()*1000)%1000)*1000000000
+        
+        if MEMO.IsTagMode(1) then 
+            value= value+2
+        elseif MEMO.IsTagMode(2) then 
+            value= value+3
+        else
+        
+        end
+
+        if MEMO.GET_WINDOWOPEN() then 
+            value= value + 10
+        end
+        AddonStateInMemory[0]=value
+    end
+
+    end
+end
+
+
+function SetHasChangedTo(randomUniqueNumber)
+    TextInMemory[1]=randomUniqueNumber
+end
+function SetHasChangedToTag()
+    TextInMemory[1]=tagInjectionGeneric
+end
+function SetHasChangedToType()
+    TextInMemory[1]=Type_3_OnChanged
+end
+
+local hasChangedIndex=0
+function SetHasChangedIncrement()
+    hasChangedIndex =hasChangedIndex+1
+    TextInMemory[1]=hasChangedIndex
+end
+
+local time=GetTime()
+function RefreshTheTickBoundary()
+    time= GetTime()
+ 
+
+    tickId =math.floor((time/tickRangeInSecond)%tickModulo)
+
+    if(MEMO.GET_USEDEBUGAUTORUNTAG()) then 
+        if tickId==0 then MEMO.SetTagMode("Tag") 
+        elseif tickId==1 then  MEMO.SetTagMode("Index") 
+        elseif tickId==2 then  MEMO.SetTagMode("Type") 
+        else  MEMO.SetTagMode("Value")  end
+    end
+
+    TextInMemory[1]= 0 -- Value used to check if the memory changed 
+    FlushValueBetweenBoundary()
+end
+function FlushValueBetweenBoundary()
+    for i=2,maxtextvalue do
+        --TextInMemory[i]=math.floor(2501000+(i%255))
+        TextInMemory[i]=0
+        --TextInMemory[i]=-9999999
+    end
+end
+function SetValueAsIndex()
+    for i=2,maxtextvalue do
+        TextInMemory[i]=i
+        --TextInMemory[i]=0
+    end
+end
+
+
+function FlushValueBetweenBoundaryToInt(value)
+    for i=2,maxtextvalue do
+        TextInMemory[i]=math.floor(value)
+        --TextInMemory[i]=0
+    end
+end
+
+
+charValueTempInt=0
+-- Do we want to store the value of the char and the index where it is store in the samem place ? 
+-- Was useful before I create the tag vs index vs value mode
+local useByteAndIndexSameMemory=false
+function SetMemoryText(text)
+    for i = 2, maxtextvalue do
+        if(i>maxtextvalue) then
+            TextInMemory[i] =0
+        else
+            if(i<=#text)then
+                --if(useByteAndIndexSameMemory)then 
+                --    TextInMemory[i] = math.floor(string.byte(text, i)*10000 +i)
+                --else 
+               TextInMemory[i] = math.floor(string.byte(text, i))
+                --end
+            else 
+                TextInMemory[i] =0
+            end
+        end
+    end
+end
+
+
+RefreshTheTickBoundary()
+--SetMemoryText("0123456789 ABC xyz  Hello World my friend ! 2501 42 :) _1234567890)^-")
+
+
+
+
+
+
+JustTest={}
+JustTest.Time=0
+JustTest.Tick=0
+
+
+OnChangedArray={}
+OnChangedArray.changingValue=0
+doubleMemoryArray ={}
+
+
+
+CustomFunction={}
+dico = {    }
+
+CustomFunction["GetMetaInfo"]=function()    
+    local anchorTick =(string.format("TICK: %s\n START TICK %s\n STOPTICK %s\n",tickId,TextInMemory[0],TextInMemory[maxtextvalue+1]))
+   
+
+
+    local player ="player"
+    local target ="target"
+    local tt ="target target"
+    local partOne=true
+    
+    local partTwo=true
+    local partbuff=true
+    local zoneName = GetZoneText() or ""
+    local subzoneName = GetSubZoneText() or ""
+    if zoneName==nil then 
+        return ""
+    end
+    
+    
+    local isDonjon= IsInInstance()
+    local pfacing=GetPlayerFacing()
+    if not isDonjon and pfacing==nil then
+        return ""
+    end
+    
+    
+    local px=0
+    local py=0
+    local pz=0 
+    if not isDonjon then
+        px, py,pz = UnitPosition("player")
+        
+    end
+    
+    
+    local facing =isDonjon and 0 or GetPlayerFacing()/(2.0*3.1418)
+  
+    if MEMO.IsTagMode("Tag") then
+        doubleMemoryArray[0]= tagInjectionGeneric  -- World position X : 9876543210001 : -9879.88
+        doubleMemoryArray[1]= tagInjectionGeneric  -- World position Y : 9876543210002 : -3.88
+        doubleMemoryArray[200]= tagInjectionGeneric  -- World position Z : 9876543210003 : -6579.88
+    
+    elseif MEMO.IsTagMode("Index") then
+        doubleMemoryArray[0]=  0
+        doubleMemoryArray[1]=  1
+        doubleMemoryArray[200]=  200
+    elseif MEMO.IsTagMode("Value") then
+        doubleMemoryArray[0]=  px 
+        doubleMemoryArray[1]=  py 
+        doubleMemoryArray[200]=  pz 
+    end
+
+    dico.realm=GetRealmName()
+    
+    dico.playerWorldPositionX= px  -- World position X : 9876543210001 : -9879.88
+    dico.playerWorldPositionY= py  -- World position X : 9876543210002 : -9879.88
+    dico.playerWorldPositionZ= pz  -- World position X : 9876543210003 : -9879.88
+    dico.playerDirectionClockwise= facing
+    dico.zoneName= zoneName
+    dico.subzoneName= subzoneName
+    
+    if true then 
+        -- if not isDonjon then 
+        
+        -- START
+        -- CODE THAT FETCH THE MAP INFORMATION OF PLAYER POSITION
+        local posX,posY 
+        if not isDonjon then
+            local map = C_Map.GetBestMapForUnit("player");
+            local pos = C_Map.GetPlayerMapPosition(map,"player");
+            posX,posY = pos:GetXY()
+        else 
+            posX=0
+            posY=0
+        end
+        
+        
+        dico.playerMapPositionX = string.format("%.3f",posX*100)
+        dico.playerMapPositionY = string.format("%.3f",posY*100)
+
+        dico.a_playerMapPositionXfloor = math.floor(posX*100)
+        dico.a_playerMapPositionYfloor = math.floor(posY*100)
+
+        JustTest[4]=dico.a_playerMapPositionXfloor 
+        JustTest[5]=dico.a_playerMapPositionYfloor
+        
+        
+        if partbuff==true then
+            
+
+
+          
+
+
+
+
+
+
+            local buffs, i = { }, 1;
+            local buff = UnitBuff("target", i);
+            
+            while buff do
+                local name = GetSpellInfo(buff);
+                if name then
+                    buffs[#buffs + 1] = '"' .. name .. '"';
+                end
+                i = i + 1;
+                buff = UnitBuff("target", i);
+            end;
+            
+            if #buffs < 1 then
+                buffs = "";
+            else
+                buffs[1] = "" .. buffs[1];
+                buffs = table.concat(buffs, " | ");
+            end;
+            dico.targetbufflist=buffs;
+            
+            local debuffs, i = { }, 1;
+            local debuff = UnitDebuff("target", i);
+            
+            while debuff do
+                local name = GetSpellInfo(debuff);
+                if name then
+                    debuffs[#debuffs + 1] = '"' .. name .. '"';
+                end
+                i = i + 1;
+                debuff = UnitDebuff("target", i);
+            end;
+            
+            if #debuffs < 1 then
+                debuffs = "";
+            else
+                debuffs[1] = "" .. debuffs[1];
+                debuffs = table.concat(debuffs, " | ");
+            end;
+            dico.targetdebufflist=debuffs;
+            
+            
+            
+            local buffs, i = { }, 1;
+            local buff = UnitBuff(player, i);
+            
+            while buff do
+                local name = GetSpellInfo(buff);
+                if name then
+                    buffs[#buffs + 1] = '"' .. name .. '"';
+                end
+                i = i + 1;
+                buff = UnitBuff(player, i);
+            end;
+            
+            if #buffs < 1 then
+                buffs = "";
+            else
+                buffs[1] = "" .. buffs[1];
+                buffs = table.concat(buffs, " | ");
+            end;
+            dico.bufflist=buffs;
+            
+            local debuffs, i = { }, 1;
+            local debuff = UnitDebuff(player, i);
+            
+            while debuff do
+                local name = GetSpellInfo(debuff);
+                if name then
+                    debuffs[#debuffs + 1] = '"' .. name .. '"';
+                end
+                i = i + 1;
+                debuff = UnitDebuff(player, i);
+            end;
+            
+            if #debuffs < 1 then
+                debuffs = "";
+            else
+                debuffs[1] = "" .. debuffs[1];
+                debuffs = table.concat(debuffs, " | ");
+            end;
+            dico.debufflist=debuffs;
+            
+        end
+        
+
+------------------------------[[
+   
+        local munit = "mouseover"
+        local serverID="eu"
+        dico.mname, dico.mrealm = UnitName(munit)
+        dico.mguildName, _, _, dico.mrealmGuild = GetGuildInfo(munit)
+        
+        dico.misplayer=UnitIsPlayer(munit)
+        if dico.mname==nil then dico.mname="" end
+        if dico.mrealm==nil then dico.mrealm="" end
+        if dico.mrealm==nil then  dico.mrealm="" end
+        if dico.mguildName==nil then dico.mguildName="" end
+        
+        
+        
+        if  dico.mrealmGuild==nil or dico.mrealmGuild=="" then
+            dico.mrealmGuild=GetRealmName()
+        end
+        if  dico.mrealm==nil or dico.mrealm=="" then
+            dico.mrealm=GetRealmName()
+        end
+        
+            
+        dico.mouse_player_url=string.format("https://worldofwarcraft.blizzard.com/en-gb/character/%s/%s/%s \n",serverID , dico.mrealm , dico.mname)
+        dico.mouse_guild_url=string.format("https://worldofwarcraft.blizzard.com/en-gb/guild/%s/%s/%s\n",serverID , dico.mrealm , dico.mguildName)
+        
+   
+    
+    
+    
+
+----------------------------
+
+
+
+
+        if partTwo==true then
+            
+            
+            dico.screenWidth = UIParent:GetWidth()
+            dico.screenHeight = UIParent:GetHeight()
+            dico.mouseX, dico.mouseY = GetCursorPosition()
+            _,dico.playerclass,_ = UnitClass(player)
+            
+            
+            
+            dico.istargetplayer= UnitIsPlayer(target)
+            dico.istargettargetplayer= UnitIsPlayer(tt)
+            dico.ispetdeath=UnitIsDead("pet")
+            
+            local targetOfTarget = "targettarget"
+            dico.targetHasTarget = UnitExists(targetOfTarget)
+            if UnitExists(targetOfTarget) then
+                dico.targettargetname = UnitName(targetOfTarget)
+                dico.targettargetunitClass, _, classID = UnitClass(targetOfTarget)
+                dico.targettargetunitLevel = UnitLevel(targetOfTarget)
+                dico.targettargetunitHealth = UnitHealth(targetOfTarget)
+                dico.targettargetunitMaxHealth = UnitHealthMax(targetOfTarget)
+                dico.targettargetunitPowerType = UnitPowerType(targetOfTarget)
+                dico.targettargetunitPower = UnitPower(targetOfTarget)
+                dico.targettargetunitMaxPower = UnitPowerMax(targetOfTarget)
+                dico.targettargetunitIsPlayer = UnitIsPlayer(targetOfTarget)
+                dico.targettargetunitIsDead = UnitIsDeadOrGhost(targetOfTarget)
+            else
+                dico.targettargetname = ""
+                dico.targettargetunitClass=""
+                dico.targettargetunitLevel =""
+                dico.targettargetunitHealth =""
+                dico.targettargetunitMaxHealth =""
+                dico.targettargetunitPowerType =""
+                dico.targettargetunitPower =""
+                dico.targettargetunitMaxPower=""
+                dico.targettargetunitIsPlayer =""
+                dico.targettargetunitIsDead =""
+            end
+            
+            -- Does it means that I could make a tool to get all the bots in a region to report :)
+            dico.tguildName, dico.tguildRankName, dico.tguildRankIndex, dico.tguildRealm, dico.tguildMembers, dico.tguildAchievementPoints, dico.tguildAchievementPointsMax, dico.tguildLevel, _ = GetGuildInfo(target)
+            dico.pguildName, dico.pguildRankName, dico.pguildRankIndex, dico.pguildRealm, dico.pguildMembers, dico.pguildAchievementPoints, dico.pguildAchievementPointsMax, dico.pguildLevel, _ = GetGuildInfo(player)
+            
+            
+            dico.tguildName =      dico.tguildName or ""
+            dico.tguildRankName =  dico.tguildRankName or ""
+            dico.tguildRankIndex =         dico.tguildRankIndex or ""
+            dico.tguildRealm =        dico.tguildRealm or ""
+            dico.tguildMembers =         dico.tguildMembers or ""
+            dico.tguildAchievementPoints =         dico.tguildAchievementPoints or ""
+            dico.tguildAchievementPointsMax =           dico.tguildAchievementPointsMax or ""
+            dico.tguildLevel =           dico.tguildLevel or ""
+            dico.pguildName =      dico.pguildName or ""
+            dico.pguildRankName =       dico.pguildRankName or ""
+            dico.pguildRankIndex =        dico.pguildRankIndex or ""
+            dico.pguildRealm =         dico.pguildRealm or ""
+            dico.pguildMembers =        dico.pguildMembers or ""
+            dico.pguildAchievementPoints =          dico.pguildAchievementPoints or ""
+            dico.pguildAchievementPointsMax =         dico.pguildAchievementPointsMax  or ""
+            dico.pguildLevel =         dico.pguildLevel or ""
+            
+            
+            dico.pguildRealm = dico.pguildRealm=="" and GetRealmName() or ""
+            dico.tguildRealm= dico.tguildRealm=="" and GetRealmName() or ""
+            
+            
+            -- Not sure of the condition of use
+            --[[
+        local playerName = "Venaliinagwy"
+        local realmName = "Doomhammer"
+        
+        local idname = playerName .. "-" .. realmName
+        
+        dico.isPlayerConnected= UnitIsConnected(idname) 
+        ]]
+            
+        end
+        
+        if partOne ==true then
+            
+            local isTargetFriendly= UnitIsFriend("player", "target")
+            dico.isTargetAlly= isTargetFriendly and "True" or "False"
+            
+            
+            dico.gold= GetMoney()
+            
+            
+            
+            local _, _, _, _, intellect, agility, stamina, strength = UnitStat("player", 1, 2, 3, 4)
+            local mastery = GetMasteryEffect()
+            local haste = GetHaste()
+            local leech = GetLifesteal()
+            local crit = GetCritChance()
+            local versatility = GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_TAKEN)
+            local _, _, _, ilvl = GetAverageItemLevel()
+            
+            
+            
+            local startTime, duration, _ = GetSpellCooldown(6948)
+            dico.cd_hearthstonestarttime =  startTime 
+            dico.cd_hearthstonestarttime =  duration 
+            dico.time = GetTime()
+            
+            
+            dico.casting = select(1, UnitCastingInfo("player"))
+            dico.channel = select(1, UnitChannelInfo("player"))
+            if dico.casting ==nil then
+                dico.casting=""
+            end
+            if dico.channel ==nil then
+                dico.channel=""
+            end
+            
+            
+            dico.statIntellectBase, dico.statIntellectStat, dico.statIntellectPosBuff, dico.statIntellectNegBuff = UnitStat(player, 1);
+            dico.statAgilityBase, dico.statAgilityStat, dico.statAgilityPosBuff, dico.statAgilityNegBuff = UnitStat(player, 2);
+            dico.statStaminaBase, dico.statStaminaStat, dico.statStaminaPosBuff, dico.statStaminaNegBuff = UnitStat(player, 3);
+            dico.statStrenghtBase, dico.statStrenghtStat, dico.statStrenghtPosBuff, dico.statStrenghtNegBuff = UnitStat(player, 4);
+            dico.armorBase, dico.armorEffectiveArmor, dico.armor, dico.armorPosBuff, dico.armorNegBuff = UnitArmor(player);
+            
+            dico.lastPingPositionx, dico.lastPingPositionY = Minimap:GetPingPosition()
+            dico.mastery , dico.masteryCoefficient= GetMasteryEffect()
+            dico.haste = GetHaste()
+            dico.leech = GetLifesteal()
+            dico.crit = GetCritChance()
+            dico.versatility = GetCombatRatingBonus(CR_VERSATILITY_DAMAGE_DONE) + GetVersatilityBonus(CR_VERSATILITY_DAMAGE_TAKEN)
+            local _, _, _, ilvl = GetAverageItemLevel()
+            
+            
+            
+            
+            
+            -- Target Information
+            dico.targetName = UnitName("target") or "No Target"
+            dico.targetHealth = UnitHealth("target") or 0
+            dico.maxHealth = UnitHealthMax("target") or 1
+            dico.targetPower = UnitPower("target") or 0
+            dico.maxPower = UnitPowerMax("target") or 1
+            dico.targetLevel = UnitLevel("target") or 0
+            dico.targetClassification = UnitClassification("target") or "Normal"
+            dico.targetCreatureType = UnitCreatureType("target") or "Unknown"
+            dico.targetFaction = UnitFactionGroup("target") or "Unknown"
+            
+            dico.targetIsPlayer = UnitIsPlayer("target")
+            dico.targetIsDead = UnitIsDead("target")
+            dico.targetIsGhost = UnitIsGhost("target")
+            dico.targetIsElite = UnitClassification("target") == "elite"
+            dico.targetIsRare = UnitClassification("target") == "rare" or UnitClassification("target") == "rareelite"
+            dico.targetIsBoss = UnitClassification("target") == "worldboss" or UnitClassification("target") == "rareelite"
+            
+            -- Player Information
+            dico.playerName = UnitName("player") or "No Player"
+            dico.playerHealth = UnitHealth("player") or 0
+            dico.maxPlayerHealth = UnitHealthMax("player") or 1
+            dico.playerPower = UnitPower("player") or 0
+            dico.maxPlayerPower = UnitPowerMax("player") or 1
+            dico.playerLevel = UnitLevel("player") or 0
+            dico.playerClassification = UnitClassification("player") or "Normal"
+            dico.playerCreatureType = UnitCreatureType("player") or "Unknown"
+            dico.playerFaction = UnitFactionGroup("player") or "Unknown"
+            
+            dico.playerIsDead = UnitIsDead("player")
+            dico.playerIsGhost = UnitIsGhost("player")
+            dico.playerIsElite = UnitClassification("player") == "elite"
+            dico.playerIsRare = UnitClassification("player") == "rare" or UnitClassification("player") == "rareelite"
+            dico.playerIsBoss = UnitClassification("player") == "worldboss" or UnitClassification("player") == "rareelite"
+            
+            -- General Information
+            dico.isInCombat = UnitAffectingCombat("player")
+            dico.isMounted = IsMounted()
+            dico.isStealthed = IsStealthed()
+            dico.isInParty = IsInGroup()
+            dico.isInRaid = IsInRaid()
+            
+            
+            
+            --]]
+            -- BLOCK SECTION PART 1 Stop
+        end
+        
+        
+    end
+    
+    
+    
+    local timeTick =10
+    local result = ""
+
+
+    --JustTest.Time= GetTime() 
+    --JustTest.Tick= math.floor( GetTime() / timeTick )
+    --JustTest[0]=JustTest.Tick
+    --JustTest[1]=dico.gold
+    --JustTest[2]=JustTest.Time
+
+    result = anchorTick
+    result = result.. "Tick Extract:"..(JustTest.Tick) .. "\n"
+    result = result.."Time:"..GetTime().."\n"
+    local keys = {}
+    
+    for key, _ in pairs(dico) do
+        table.insert(keys, key)
+    end
+    
+    -- Sort keys
+    table.sort(keys)
+    
+    -- Iterate over sorted keys
+    for _, key in ipairs(keys) do
+        local value = dico[key]
+        
+        -- Check if the value is nil
+        if value == nil then
+            value = "nil"
+        elseif type(value) == "boolean" then
+            -- Convert boolean to string
+            value = value and "True" or "False"
+        end
+        
+        result = result .. key .. ":" .. value .. "\n"
+    end
+    
+
+    RefreshTheTickBoundary()
+    useAddressTagInjection=tickId%2==0
+    if MEMO.IsTagMode("Tag") then
+        FlushValueBetweenBoundaryToInt(tagInjectionGeneric)
+    elseif MEMO.IsTagMode("Index") then
+        SetValueAsIndex()
+    else
+        SetMemoryText(result)
+    end
+    SetHasChangedIncrement()
+    RefreshAddonStateAndUpdateOnChanged()
+    return result
+    
+end
+
+
+
+
+
+

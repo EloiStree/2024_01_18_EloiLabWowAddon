@@ -1,0 +1,102 @@
+--Tutorial to learn ADDON: https://youtu.be/nfaE7NQhMlc?list=PL3wt7cLYn4N-3D3PTTUZBM2t1exFmoA2G
+
+-- Define a saved variable for your addon
+
+local Main = CreateFrame('FRAME')
+local Utils = {}
+--
+--
+
+----------------------FUNCTION-----------------------[[
+
+
+local function helloWorld(saySomething , ...)
+
+    Utils:Print("Print say:" .. (saySomething or "None"))
+    Utils:Print("Red","ff0000")
+    Utils:Print("Green","00ff00")
+    Utils:Print("Blue","00000ff")
+   
+
+    print("Parmas lenght:"..(#{...}))
+
+    if not {...} ==nil then
+        print("Params:")
+        for i=1, i <= #{...},1 do
+            print("Test:"+i)
+        end
+        print("Index key pair:")
+
+        for key, value in ipairs({...}) do
+            print(key.." : "..value);
+        end
+        print("Key pair:")
+
+        for key, value in pairs({...}) do
+            print(key.." : "..value);
+        end
+    end
+
+end
+
+
+
+------------------------STATIC FUNCTION--------------------------
+EloiLabDB = {}
+
+EloiLabDB.enabled = true
+EloiLabDB.statictext = "Default export text"
+
+function EloiLab_GetStaticText()
+    return EloiLabDB.statictext
+end
+
+function EloiLab_SetStaticText(text)
+    EloiLabDB.statictext = text
+end
+
+
+------------------- STRINGS
+local Strings = {}
+Strings.example="Example of how to store string around"
+
+
+----------------------FRAME----------------------------
+
+
+-- Basic setup
+local frame = CreateFrame("Frame", "Eloi Lab Frame")
+frame:RegisterEvent("PLAYER_LOGIN")
+
+--[[
+frame.show = nil
+frame.text = nil
+frame.textFormat = nil
+frame.decimals = nil
+frame.isMoving = false
+]]
+-- Event handler
+function frame:OnEvent(event, arg1, ...)
+    if event == "PLAYER_LOGIN" then
+        
+        helloWorld("Bonjour Wow", "J'aime les frites",5)
+    end
+end
+
+
+
+-------------------------------------------------------
+
+helloWorld("A Comment ça va ?");
+helloWorld("hello", 1 , 5.2134, {"1",2});
+helloWorld();
+
+
+
+local ADDON_DISPLAY_NAME = "Eloi Lab"
+function Utils:Print(aMsg)
+    print(string.format("|cff4fd0ff%s:|r %s", ADDON_DISPLAY_NAME, aMsg))
+  end
+function Utils:Print(aMsg, color)
+    print(string.format("|c"..color.."ff%s:|r %s", ADDON_DISPLAY_NAME, aMsg))
+end
