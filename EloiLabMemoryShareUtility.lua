@@ -10,6 +10,7 @@ tagInjectionGeneric=1231231
 --BE CAREFUL WITH THIS ONE DONT USE TO MUCH
 -- ALLOW TO TOUCH
 maxtextvalue =4000
+maxgateinvalue =1500
 
 
 
@@ -24,6 +25,9 @@ Type_6_DummyBoolean=6
 Type_7_BitBoolean=7
 Type_8_Bit0To9=8
 Type_9_FiveCharInDouble=9
+Type_21_WriteChar=21            -- reserve memory to be fill with a char
+Type_22_WriteCallLuaFunction=22  -- reserve memory to be fill with a char
+
 
 Mod_0_Tag=0
 Mod_1_Type=1
@@ -35,11 +39,23 @@ Mod_3_Value=3
 AddonStateInMemory = {}
 -- ARRAY USE TO STORE THE TEXT TO MEMORY
 TextInMemory={}
+
+
+-- ARRAY USE TO Read outside text
+GateInMemory={}
+
+
 -- STORE THE METHODE THAT MANAGE THE TEXT TO MEMORY
 MemoryFunction={}
 
 -- STORE THE METHODE THAT MANAGE THE TEXT TO MEMORY
 EventArray={}
+
+
+MemoryLuaCall={}
+MemoryLuaCall.Command=987654321
+MemoryLuaCall.CommandPrevious=987654321
+
 
 -------- ARRAYS INIT
 EventArray.onChangedValue=0
@@ -74,6 +90,105 @@ tickRangeInSecond=6
 tickId=1
 
 
+
+MemoryFunction.OnceOnly= function ()
+
+
+    
+    
+    --print("BeforeGetCustomText()")
+
+end
+
+
+function SetAllGateInToIndexToInt(value) 
+    for i=1,maxgateinvalue do
+        GateInMemory[i]=value
+    end
+end
+
+function SetGateInToIndex() 
+    for i=1,maxgateinvalue do
+        GateInMemory[i]=i
+    end
+end
+
+function ReadInt255AsText()
+    local result =""
+    for i=1,maxgateinvalue do
+        if(GateInMemory[i]==10  )then
+          result=result..'\n'
+        elseif(GateInMemory[i]<32 or GateInMemory[i]>=255) then
+            result=result..'_'
+        else    
+            result=result..string.char( math.floor(GateInMemory[i]))
+        end
+    end
+    return result
+end
+SetAllGateInToIndexToInt(0)
+
+function SetGateInWithRandomChar()
+
+    for i=1,maxgateinvalue do
+        GateInMemory[i]=math.random(33,127)
+    end
+    
+
+end
+
+SetAllGateInToIndexToInt(0)
+SetGateInWithRandomChar()
+
+
+
+
+
+MemoryFunction.ReadGateInFunctionCall= function ()
+
+    
+    --print("BeforeGetCustomText()")
+
+    if MEMO.IsTagMode("Tag") then
+        MemoryLuaCall.Command= tagInjectionGeneric
+    elseif MEMO.IsTagMode("Index") then
+        MemoryLuaCall.Command= 0
+    elseif MEMO.IsTagMode("Type") then              
+        MemoryLuaCall.Command= Type_21_WriteCallLuaFunction
+    else
+        if(MemoryLuaCall.Command ~= MemoryLuaCall.CommandPrevious) then
+            MemoryLuaCall.CommandPrevious=MemoryLuaCall.Command
+            return MemoryLuaCall.Command ,true 
+        end
+        return 0,false 
+    end
+    return 0,false 
+end
+
+
+MemoryFunction.ReadGateInText= function ()
+
+
+    --print("BeforeGetCustomText()")
+
+    if MEMO.IsTagMode("Tag") then
+        SetAllGateInToIndexToInt(tagInjectionGeneric)
+        return "Tag"-- remove after debug
+    elseif MEMO.IsTagMode("Index") then
+        SetGateInToIndex()
+        return "Index"-- remove after debug
+    elseif MEMO.IsTagMode("Type") then        
+        SetAllGateInToIndexToInt(Type_21_WriteChar)
+        return "Type" -- remove after debug
+    else
+        return ""..ReadInt255AsText()
+    end
+    return "DD" 
+end
+
+
+
+
 MemoryFunction.BeforeGetCustomText= function ()
     --print("BeforeGetCustomText()")
 
@@ -81,7 +196,7 @@ end
 
 MemoryFunction.AfterGetCustomText= function(text)
     --print("AfterGetCustomText()")
-    print ("D:"..(text==nil and text or "Null"))
+    --print ("D:"..(text==nil and text or "Null"))
 
 
     RefreshTheTickValue()
@@ -90,6 +205,7 @@ MemoryFunction.AfterGetCustomText= function(text)
     if(MEMO.GET_USEDEBUGAUTORUNTAG())then
         SetTagWithTick()
     end
+
 
     if MEMO.IsTagMode("Tag") then
         SetAllTextMemoryToValueFloored(tagInjectionGeneric)
@@ -101,6 +217,10 @@ MemoryFunction.AfterGetCustomText= function(text)
         SetMemoryTextWithGivenString(text)
     end
 
+
+
+
+
     -- Notify THAT SOME VALUE CHANGED
     SetHasChangedIncrement()
     RefreshOnChangedAddress()
@@ -108,7 +228,7 @@ MemoryFunction.AfterGetCustomText= function(text)
     -- ADDON STATE ALLOWS TO KNOW WHERE WE ARE IN THE ADDON FROM OUTSIDE
     RefreshAddonStateAndUpdateOnChanged()
     
-    print("CustomText Pushed")
+    --print("CustomText Pushed")
 
 end
 

@@ -1,4 +1,9 @@
 
+
+
+
+--CameraZoomOut(increment)
+
 -- WANT TO CUSTOM YOUR OWN ?
 -- TRY ON WEAK AURA THEN OVERWRITE "GetMetaInfo"
 -- REPLACE THIS FUNCTION TO ADD YOUR OWN CODE FOR YOUR TOOL.
@@ -63,6 +68,10 @@ Strings.DevName="Eloi Stree"
 Strings.DebugKeyName="W"
 Strings.ServerID="eu";
 
+local checkForCall={}
+
+checkForCall.fctCalled=0
+checkForCall.hasChanged=false
 
 
 
@@ -70,22 +79,59 @@ Strings.ServerID="eu";
 
 --||||||||      SAVED MEMORY VAR ACCESS      |||||||||
 MEMO= {}
+MEMO.OnWindowOpenChanged = function (value)
+    if(value) then 
+        print("Hide UI Eloi Lab")
+        clipFrame:Show()
+        clipPrintFrame:Show();
+        clipFrame.editBox:Show()
+        clipPrintFrame.editBox:Show();
+        DebugMemoryTextFrame:Show();
+    else 
+        print("Show UI Eloi Lab")
+        clipFrame:Hide()
+        clipPrintFrame:Hide();
+        clipFrame.editBox:Hide()
+        clipPrintFrame.editBox:Hide();
+        DebugMemoryTextFrame:Hide();
+    
+    end
+end
 
 MEMO.IS_ADDONLOADED= function() return Bools.addonLoaded end
-MEMO.SET_WINDOWOPEN=function (value)  MEMO_PLAYERNOTE=value end
-MEMO.SET_METAINFOTEXT=function (value) MEMO_METAINFOTEXT=value end
-MEMO.SET_PLAYERNOTE=function (value) MEMO_PLAYERNOTE=value end
+
 MEMO.SET_USEDEBUGAUTORUNTAG=function (value)  MEMO_DEBUGAUTORUNTAG=value end
-MEMO.SET_MEMO_CLIPBOARD =function (value)  MEMO_CLIPBOARD=value end
-MEMO.GET_WINDOWOPEN=function () return MEMO_PLAYERNOTE end
-MEMO.GET_METAINFOTEXT=function () return  MEMO_METAINFOTEXT end
-MEMO.GET_PLAYERNOTE=function () return MEMO_PLAYERNOTE end
 MEMO.GET_USEDEBUGAUTORUNTAG=function () return MEMO_DEBUGAUTORUNTAG end
+
+MEMO.SET_WINDOWOPEN=function (value)  MEMO_WINDOWOPEN=value MEMO.OnWindowOpenChanged(value) end
+MEMO.GET_WINDOWOPEN=function () return MEMO_WINDOWOPEN end
+
+MEMO.SET_METAINFOTEXT=function (value) MEMO_METAINFOTEXT=value end
+MEMO.GET_METAINFOTEXT=function () return  MEMO_METAINFOTEXT end
+
+MEMO.TOGGLE_WINDOWOPEN=function () return MEMO.SET_WINDOWOPEN (not MEMO.GET_WINDOWOPEN()) end
+
+MEMO.SET_MEMO_CLIPBOARD =function (value)  MEMO_CLIPBOARD=value  end
 MEMO.GET_MEMO_CLIPBOARD =function () return MEMO_CLIPBOARD end
 
-MEMO.GET_SERVERID  =function () return MEMO_SERVERID  end
 MEMO.SET_SERVERID =function (value) MEMO_SERVERID =value end
+MEMO.GET_SERVERID  =function () return MEMO_SERVERID  end
 
+MEMO.SET_PLAYERNOTE=function (value) MEMO_PLAYERNOTE=value end
+MEMO.GET_PLAYERNOTE=function () return MEMO_PLAYERNOTE end
+
+
+
+MEMO.ToggleBlindMode= function ()    
+    MEMO_BLINDMODE = not MEMO_BLINDMODE
+end
+
+MEMO.SetBlindMode= function (boolValue)    
+    MEMO_BLINDMODE = boolValue
+end
+MEMO.GetBlindMode= function ()    
+    return MEMO_BLINDMODE
+end
 
 MEMO.AppendStartClipboard= function (text)    
     MEMO_CLIPBOARD = text..MEMO_CLIPBOARD
@@ -126,7 +172,7 @@ MEMO.IsTagMode =function (modeId)
     if modeId == "Type" or modeId==1 then
         return MEMO_TAGMODE ==1
     end   
-    if modeId == "Value" or modeId==2  then
+    if modeId == "Index" or modeId==2  then
         return MEMO_TAGMODE ==2
     end
     if modeId == "Value" or modeId==3 then
@@ -137,12 +183,14 @@ end
 
 
 MEMO.PrintALL=function () 
-    print ("## CHECK SAVED MEMORY ##")
-    print("- Is loaded ? "..(MEMO.IsTrueAsString( MEMO.IS_ADDONLOADED()) ))
-    print("  - Keep Window open ? "..(MEMO.IsTrueAsString( MEMO.GET_WINDOWOPEN())))
-    print("  - Player note: "..(MEMO.ProtectEmpty (MEMO.GET_PLAYERNOTE())))
-    print("  - Meta text: "..(MEMO.ProtectEmpty (MEMO.GET_METAINFOTEXT())))
+    El_Print( "## CHECK SAVED MEMORY ##")
+    ElP_End("- Is loaded ? "..(MEMO.IsTrueAsString( MEMO.IS_ADDONLOADED()) ))
+    ElP_End("  - Keep Window open ? "..(MEMO.IsTrueAsString( MEMO.GET_WINDOWOPEN())))
+    ElP_End("  - Player note: "..(MEMO.ProtectEmpty (MEMO.GET_PLAYERNOTE())))
+    ElP_End("  - Meta text: "..(MEMO.ProtectEmpty (MEMO.GET_METAINFOTEXT())))
 end
+
+
 
 MEMO.IsTrue = function (value) 
     if(value==nil) then return false end
@@ -278,12 +326,92 @@ end
 
 
 
+--||||||||     CREATE THE FRAME  PRINT CLIPBOARD     |||||||||
+
+ -- Create the frame
+ clipPrintFrame = CreateFrame("Frame", "Clip Print Frame", UIParent)
+
+ clipPrintFrame:SetMovable(true)
+ clipPrintFrame:EnableMouse(true)
+ clipPrintFrame:RegisterForDrag("LeftButton")
+ clipPrintFrame:SetScript("OnDragStart", clipPrintFrame.StartMoving)
+ clipPrintFrame:SetScript("OnDragStop", clipPrintFrame.StopMovingOrSizing)
+
+    
+
+ -- Add an EditBox to the frame for text input
+ clipPrintFrame.editBox = CreateFrame("EditBox", nil, clipPrintFrame)
+ clipPrintFrame.editBox:SetAllPoints(true)
+ clipPrintFrame.editBox:SetMultiLine(true)
+ clipPrintFrame.editBox:SetAutoFocus(false)
+ clipPrintFrame.editBox:SetFontObject(ChatFontNormal)
+ clipPrintFrame.editBox:SetScript("OnEscapePressed", function() clipPrintFrame:Hide() end)
+
+-- Function to set text in the EditBox
+clipPrintFrame.SetText = function(self, text)
+    self.editBox:SetText(text)
+end
+
+clipPrintFrame.GetText = function(self)
+    return self.editBox:GetText()
+end
+
+
+
+-- Method to set text in the movable frame
+function ClipboardFunction:ClearPrintText()
+    if clipPrintFrame then
+        clipPrintFrame:SetText("")
+    end
+end
+
+-- Method to set text in the movable frame
+function ClipboardFunction:SetPrintText(text)
+    if clipPrintFrame then
+        clipPrintFrame:SetText(text)
+    end
+end
+
+-- Method to set text in the movable frame
+function ClipboardFunction:AppentPrintTextEnd(text)
+    if clipPrintFrame then
+        clipPrintFrame:SetText(clipPrintFrame:GetText().. text)
+    end
+end
+-- Method to set text in the movable frame
+function ClipboardFunction:AppentPrintTextStart(text)
+    if clipPrintFrame then
+        clipPrintFrame:SetText(text ..clipPrintFrame:GetText())
+    end
+end
+
+ELP={}
+
+
+ELP.Set = function (message)    ClipboardFunction:SetPrintText(message)end   
+ELP.Print= function (message)   ELP.Set(message) end
+ELP.Start = function (message)    ClipboardFunction:AppentPrintTextStart(message) end 
+ELP.End = function (message)    ClipboardFunction:AppentPrintTextEnd(message) end
+ELP.StartLine = function (message)  ClipboardFunction:AppentPrintTextStart(message.."\n")end 
+ELP.EndLine = function (message) ClipboardFunction:AppentPrintTextEnd("\n"..message)end
+-- Function to show the movable frame
+
+
+function ClipboardFunction:ShowPrintMovableFrame()
+    if not clipPrintFrame then
+        ClipboardFunction:CreateMovableFrame()
+    end
+    clipPrintFrame:Show()
+end
+
+
 
 
 --||||||||     CREATE THE FRAME       |||||||||
 
+
 -- Create the DebugMemoryTextFrame frame
-local DebugMemoryTextFrame = CreateFrame("Frame", "DebugMemoryTextFrame", UIParent)
+ DebugMemoryTextFrame = CreateFrame("Frame", "DebugMemoryTextFrame", UIParent)
 
 -- Create a scroll frame to support scrolling for long texts
 local ScrollFrame = CreateFrame("ScrollFrame", "DebugMemoryTextScrollFrame", DebugMemoryTextFrame, "UIPanelScrollFrameTemplate")
@@ -346,33 +474,65 @@ function UpdateFramesPosition()
     DebugMemoryTextFrame:SetPoint("LEFT", 0, 0)
     ScrollFrame:SetPoint("TOPLEFT", DebugMemoryTextFrame, "TOPLEFT", 0, 0)
     ScrollFrame:SetPoint("BOTTOMRIGHT", DebugMemoryTextFrame, "BOTTOMRIGHT", 0, 0)
+    
     EditBox:SetWidth(ScrollFrame:GetWidth() - 20)
     EditBox:SetHeight(ScrollFrame:GetHeight()) 
-    clipFrame:SetSize(UIParent:GetWidth() * 0.20, UIParent:GetHeight()*0.05)
-    clipFrame:SetPoint("TOPLEFT", UIParent:GetWidth() * 0.22, 0)
+
+    clipFrame:SetSize(UIParent:GetWidth() * 0.2, UIParent:GetHeight()*0.05)
+    clipFrame:SetPoint("TOPLEFT",( 0.2 * (UIParent:GetWidth() )+30), 0)
+    
+    clipPrintFrame:SetSize(UIParent:GetWidth() * 0.20, UIParent:GetHeight()*0.05)
+    clipPrintFrame:SetPoint("TOPLEFT", (0.4*(UIParent:GetWidth())+30) ,0)
 
 end
 
+function clipFrame:ShowFrame()
+    self:Show()
+end
 
+function clipFrame:HideFrame()
+    self:Hide()
+end
+
+
+function clipPrintFrame:ShowFrame()
+    self:Show()
+end
+
+function clipPrintFrame:HideFrame()
+    self:Hide()
+end
+
+
+function CheckForBlindMode()
+    
+    if(MEMO.GetBlindMode())then
+        SetCVar("RenderScale", 0.009)        
+    else 
+        SetCVar("RenderScale", 0.5)
+        
+    end
+end
 
 function frame:OnEvent(event, arg1)
     UpdateFramesPosition()
     if Bools.toggle_OnEventDebugLog then
-        print("Event:".. (event or ""))
-        print("Arg1:".. (arg1 or ""))
+        ELP.Print("Event:".. (event or ""))
+        ELP.End ( "Arg1:".. (arg1 or ""))
     end
 
 
 
     --||||||||     WHEN PLAYER RELOAD      |||||||||
     if event == "ADDON_LOADED" and arg1 == "EloiLab" then
-        print("> Eloi Lab info: /elhelp ")
-        print("> How to use ? /elrtfm")
-        print("> This tool is for educational purpose")
-        print("> Use it is against TOS")
-        print("> YOU ARE GOING TO BE BAN FOR USING IT: DON'T.")
-        print("= But if you do, Have fun learning :)-")
+        ELP.Print("> Eloi Lab info: /elhelp ")
+        ELP.EndLine ("> How to use ? /elrtfm")
+        ELP.EndLine("> This tool is for educational purpose")
+        ELP.EndLine("> Use it is against TOS")
+        ELP.EndLine("> YOU ARE GOING TO BE BAN FOR USING IT: DON'T.")
+        ELP.EndLine("= But if you do, Have fun learning :)-")
             
+        
         
 
         
@@ -397,7 +557,7 @@ function frame:OnEvent(event, arg1)
         end
 
         RunTestLuaText("print('Hoy hey hoy !')")
-        
+        CheckForBlindMode()
         --QuickTestRef.start()
 
 
@@ -418,7 +578,7 @@ function RunTestLuaText(luaCodeText)
     if luaCodeFunction then
         luaCodeFunction()
     else
-        print("Error in Lua code:", errorMessage)
+        ELP.Print("Error in Lua code:".. errorMessage)
     end
 end
 function RunTestLuaTextWithReturn(luaCodeText)
@@ -432,6 +592,24 @@ local luaCodeFunction, errorMessage = loadstring(luaCodeText)
 end
 
 
+local text0=""
+function RunTestLuaTextCatched(luaCodeText)
+    text0 =luaCodeText
+    _,_=pcall(RunTestLuaTextCatched0)
+end
+function RunTestLuaTextCatched0()
+
+    local luaCodeFunction, errorMessage = loadstring(text0)
+        if luaCodeFunction then
+            return luaCodeFunction()
+        else
+            ELP.Print("Lua Not Executed "..GetTime());
+            return ("Error in Lua code:".. errorMessage)
+        end
+    end
+    
+    
+
 
 ExitFunction={}
 ExitFunction.ResetVar=function ()
@@ -441,19 +619,6 @@ ExitFunction.ResetVar=function ()
 end
 
 
-
-MemoryLuaCall={}
-
-MemoryLuaCall.Command=987654321
-MemoryLuaCall.CommandPrevious=987654321
-
-
-CustomLuaCodeIndex={}
-CustomLuaCodeIndex[0]="print('Reset to zero')"
-CustomLuaCodeIndex[1]="RandomRoll(0, 100)"
-CustomLuaCodeIndex[2]="UI OpenAllBags()"
-CustomLuaCodeIndex[3]="UI CloseAllBags() "
-CustomLuaCodeIndex[4]="print('Hello, World 5 LUUUAA! '..GetCurrentMapAreaID () )"
 
 
 --[[
@@ -481,11 +646,16 @@ SetView(index) - Sets camera position to a specified (1-5) predefined camera pos
 
 
 
-function RunLuaUnderCatch()
-    if (MemoryLuaCall.Command<1000 and MemoryLuaCall.Command>0) then 
-        RunTestLuaText(CustomLuaCodeIndex[MemoryLuaCall.Command])
+local maxFunctionCallable= 1000
+function RunLuaUnderCatchFromFctCallId()
+    if (checkForCall.fctCalled < maxFunctionCallable and checkForCall.fctCalled>0) then 
+        RunTestLuaText(CustomLuaCodeIndex[checkForCall.fctCalled])
     end
 end
+
+
+
+
 
 LuaText={}
 LuaText.clipboardtext=""
@@ -503,14 +673,13 @@ end
 
 StaticMetaInfo={}
 StaticMetaInfo.text=""
+
+
+local previousLua=""
 function frame:OnUpdate(aElapsed)
     
 
-    if(MemoryLuaCall.Command ~= MemoryLuaCall.CommandPrevious) then
-        MemoryLuaCall.CommandPrevious=MemoryLuaCall.Command
-        print("Command Called:"..MemoryLuaCall.Command)
-        local success, result = pcall(RunLuaUnderCatch)
-    end
+   
 
     if not Bools.addonLoaded then return end
 
@@ -534,23 +703,36 @@ function frame:OnUpdate(aElapsed)
         --and type(MemoryFunction.AfterGetCustomText)=="function" 
      
     then  
+
+        checkForCall.fctCalled, checkForCall.hasChanged = MemoryFunction.ReadGateInText()
+        if(checkForCall.hasChanged) then 
+            ELP.Print("Command Called:"..checkForCall.fctCalled)
+            local success, result = pcall(RunLuaUnderCatchFromFctCallId)
+        end
         
-        --MemoryFunction.BeforeGetCustomText()
-        --StaticMetaInfo.text =CustomFunction:GetMetaInfo() ;
+
+        local gateInReceived = MemoryFunction.ReadGateInText()
+        MemoryFunction.BeforeGetCustomText()
+        StaticMetaInfo.text =CustomFunction:GetMetaInfo() 
         if StaticMetaInfo.text == nil then
             StaticMetaInfo.text= "Nil returned"
         else 
-            --print (metaInfo)
+            DebugMemoryTextFrame:SetTextContent("GATE IN:\n"..gateInReceived .."\n\n\nGATE OUT:\n"..StaticMetaInfo.text )
+            
+            if(string.lower(previousLua) ~= string.lower(gateInReceived)) then 
+                --print("II")
+                RunTestLuaTextCatched(gateInReceived)
+                previousLua=gateInReceived
+            end
+            
         end
-        --MemoryFunction.AfterGetCustomText()
+        MemoryFunction.AfterGetCustomText(StaticMetaInfo.text)
     end
     
    -- print (StaticMetaInfo.text)
-
-    
-    DebugMemoryTextFrame:SetTextContent(StaticMetaInfo.text .. "")
-    --ClipboardFunction:SetText(metaInfo .. "")
-    --MainPurpose.SetTextInStaticMemory(metaInfo .. "")
+   -- OLD: was trying to read text from memory before realizing that LUA string changing addresses system.
+   -- Not a anti-cheat, just lua dealing with memory
+    MainPurpose.SetTextInStaticMemory(StaticMetaInfo.text )
 
     
     --||||||||    KEY MANAGEMENT  |||||||||
@@ -607,30 +789,31 @@ frame:SetScript('OnUpdate', frame.OnUpdate)
     --||||||||    MANAGE SHORTCUT |||||||||
 SLASH_ELOILAB1 = "/eloilab";
 function SlashCmdList.ELOILAB(msg)
-    print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
-    print("Cmd: /elhelp ");
+    ELP.Print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
+    ELP.EndLine("Cmd: /elhelp ");
 end
     --||||||||    MANAGE SHORTCUT |||||||||
 SLASH_ELOILABLIST1 = "/elhelp";
 function SlashCmdList.ELOILABLIST(msg)
-    print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
-    print("- /elwrite : write a note to keep between players");
-    print("- /elread : read a note to keep between players");
-    print("- /elcheck : display memory state");
-    print("- /elshow : show info");
-    print("- /elhide : hide info");
-    print("- /elstart : Start to work and continue when you reload");
-    print("- /elstop : Stop to work and need start to continue after reload");
-    print("- /eltag : Put that address tag in the memory");
-    print("- /elindex : Put the index Tag in the memory");
-    print("- /eltype : Put the type in the memory");
-    print("- /elvalue : Put the value in the memory");
-    print("- /elautotagon : While modulo around 4 tag type value");
-    print("- /elautotagoff : Stop debug mode (require manual now)");
-    print("- /elserver eu|us|?? : Set the server you are on for link generation");
-    print("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
-    print("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
-    print("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
+
+    ELP.Print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
+    ELP.EndLine("- /elwrite : write a note to keep between players");
+    ELP.EndLine("- /elread : read a note to keep between players");
+    ELP.EndLine("- /elcheck : display memory state");
+    ELP.EndLine("- /elshow : show info");
+    ELP.EndLine("- /elhide : hide info");
+    ELP.EndLine("- /elstart : Start to work and continue when you reload");
+    ELP.EndLine("- /elstop : Stop to work and need start to continue after reload");
+    ELP.EndLine("- /eltag : Put that address tag in the memory");
+    ELP.EndLine("- /elindex : Put the index Tag in the memory");
+    ELP.EndLine("- /eltype : Put the type in the memory");
+    ELP.EndLine("- /elvalue : Put the value in the memory");
+    ELP.EndLine("- /elautotagon : While modulo around 4 tag type value");
+    ELP.EndLine("- /elautotagoff : Stop debug mode (require manual now)");
+    ELP.EndLine("- /elserver eu|us|?? : Set the server you are on for link generation");
+    ELP.EndLine("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
+    ELP.EndLine("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
+    ELP.EndLine("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
     
 end
 
@@ -659,9 +842,9 @@ end
 
 SLASH_ELOILABRTFM1 = "/elrtfm";
 function SlashCmdList.ELOILABRTFM(msg)
-    ClipboardFunction:SetText("Manual: https://github.com/EloiStree/HelloWarcraftQAXR/issues\n" )
-    ClipboardFunction:AppentTextEnd("Code Addons: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon\n")
-    ClipboardFunction:AppentTextEnd("Code Memory Reader: https://github.com/EloiStree/2023_12_31_ReadMemoryOfWow\n")
+    ELP.Print("Manual: https://github.com/EloiStree/HelloWarcraftQAXR/issues\n" )
+    ELP.EndLine("Code Addons: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon\n")
+    ELP.EndLine("Code Memory Reader: https://github.com/EloiStree/2023_12_31_ReadMemoryOfWow\n")
 end
 
 
@@ -677,7 +860,7 @@ SLASH_ELOILABELOIEDITLUAPRINT1 = "/eluaprintreturn";
 function SlashCmdList.ELOILABELOIEDITLUAPRINT(msg)
     
     --print(("Try Start"))
-    print(">"..ExecuteCodeAndPrintResult(ClipboardFunction:GetText()))
+    ELP.Print(">"..ExecuteCodeAndPrintResult(ClipboardFunction:GetText()))
     --print(("Try End"))
 end
 
@@ -696,26 +879,25 @@ end
 
 SLASH_ELOILABMODTAG1 = "/eltag";
 function SlashCmdList.ELOILABMODTAG(msg)
-    print("Is in tag mode "..tagInjectionGeneric)
+    ELP.Print("Is in tag mode "..tagInjectionGeneric)
     MEMO.SetTagMode("Tag")
 end
 
-
 SLASH_ELOILABMODINDEX1 = "/elindex";
 function SlashCmdList.ELOILABMODINDEX(msg)
-    print("Is in index mode")
+    ELP.Print("Is in index mode")
     MEMO.SetTagMode("Index")
 end
 
 SLASH_ELOILABMODVALUE1 = "/elvalue";
 function SlashCmdList.ELOILABMODVALUE(msg)
-    print("Is in value mode")
+    ELP.Print("Is in value mode")
     MEMO.SetTagMode("Value")
 end
 
 SLASH_ELOILABMODTYPE1 = "/eltype";
 function SlashCmdList.ELOILABMODTYPE(msg)
-    print("Is in type mode")
+    ELP.Print("Is in type mode")
     MEMO.SetTagMode("Type")
 end
 
@@ -728,22 +910,22 @@ end
 
 SLASH_ELOILABSTART1 = "/elstart";
 function SlashCmdList.ELOILABSTART(msg)
-    print("Not implemented")
+    ClipboardFunction:SetText("Not implemented")
 end
 
 SLASH_ELOILABSTOP1 = "/elstop";
 function SlashCmdList.ELOILABSTOP(msg)
-    print("Not implemented")
+    ClipboardFunction:SetText("Not implemented")
 end
 
 SLASH_ELOILABWRITE1 = "/elwrite";
 function SlashCmdList.ELOILABWRITE(msg)
-    print("Write:" .. msg);
+    ClipboardFunction:SetText("Write:" .. msg);
     MEMO.SET_PLAYERNOTE(msg)
 end
 SLASH_ELOILABREAD1 = "/elread";
 function SlashCmdList.ELOILABREAD(msg)
-    print("Read:" .. (MEMO.GET_PLAYERNOTE() or " "));
+    ClipboardFunction:SetText("Read:" .. (MEMO.GET_PLAYERNOTE() or " "));
     
 end
 
@@ -760,13 +942,13 @@ end
 
 SLASH_ELOILABUTOTAGON1 = "/elautotagon";
 function SlashCmdList.ELOILABUTOTAGON(msg)
-    print("Auto Tag loop On");
+    ELP.Print("Auto Tag loop On");
     MEMO.SET_USEDEBUGAUTORUNTAG(true)
 end
 
 SLASH_ELOILABTAGOFF1 =   "/elautotagoff";
 function SlashCmdList.ELOILABTAGOFF(msg)
-    print("Auto Tag loop Off");
+    ELP.Print("Auto Tag loop Off");
     MEMO.SET_USEDEBUGAUTORUNTAG(false)
 end
 
@@ -847,6 +1029,7 @@ PlayerInfo.GetInfo= function(target)
     if( not UnitIsPlayer(target) ) then
         local npcInfoString = "Non-Player Information: "..select.."\n"
         
+        npcInfoString = npcInfoString ..  ( UnitGUID(target)  or  "" ).."\n";
         local level = UnitLevel(target) or "Unknown Level"
         local classification = UnitClassification(target) or "Unknown Classification"
         npcInfoString = npcInfoString .. "Level: " .. level .. "\nClassification: " .. classification .. "\n"
@@ -860,6 +1043,7 @@ PlayerInfo.GetInfo= function(target)
     end
 
 
+    localDico._GUID= ( UnitGUID(target)  or  "" ).."\n";
     localDico.targetlevel=UnitLevel(target)
     localDico.mname, localDico.mrealm = UnitName(target)
     localDico.mguildName, _, _, localDico.mrealmGuild = GetGuildInfo(target)
@@ -912,13 +1096,15 @@ PlayerInfo.GetInfo= function(target)
 
      localDico.mouse_guild_url= (replaceSpacesWithHyphens(trimString(localDico.mouse_guild_url)))
 localDico.whisper = string.format("/w %s-%s",localDico.mname,localDico.mrealm)
-    return string.format("%s | %s %s\n%s\n%s\n%s\n%s\n%s\n\n",
+    return string.format("%s | %s %s\n%s\n%s\n%s\n%s\n%s\n%s\n\n",
     localDico.mname,localDico.mrealm,localDico.targetlevel,
+    localDico._GUID,
     localDico.guildDescription,
     localDico.mouse_player_url,
     localDico.mouse_player_raidio_url,
     localDico.mouse_guild_url,
     localDico.whisper
+    
 )
 
 end
@@ -927,3 +1113,133 @@ end
 
 --------------------------------------------------------------------------[[
 
+
+
+local isMouseOverLogo=false
+local charDebugMode=false
+
+
+
+-- MyAddon.lua
+
+-- Create a frame
+local LogoImage = CreateFrame("Frame", "LogoImage", UIParent)
+LogoImage:SetSize(64, 64)
+LogoImage:SetPoint("CENTER")
+LogoImage:EnableMouse(true)
+LogoImage:SetMovable(true)
+LogoImage:RegisterForDrag("LeftButton")
+LogoImage:SetScript("OnDragStart", LogoImage.StartMoving)
+LogoImage:SetScript("OnDragStop", LogoImage.StopMovingOrSizing)
+
+-- Create a texture for the clickable image
+local LogoImageTexture = LogoImage:CreateTexture(nil, "OVERLAY")
+LogoImageTexture:SetAllPoints()
+--LogoImageTexture:SetTexture("Interface\\AddOns\\EloiLab\\Image\\RTFM.tga")
+LogoImageTexture:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+local imagePath = "Interface\\AddOns\\EloiLab\\Images\\EloiTeachingLab.tga"
+LogoImageTexture:SetTexture(imagePath)
+LogoImageTexture:SetAllPoints()
+
+-- Set the strata and level
+LogoImage:SetFrameStrata("HIGH")  -- Set the strata to "HIGH" to place it above most UI elements
+LogoImage:SetFrameLevel(100)  -- Set the level to a high value
+
+-- Set a tooltip for the image
+LogoImage:SetScript("OnEnter", function(self)
+    isMouseOverLogo=true
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText("Middle:How to use Addon | Right:Learn to Code")
+    GameTooltip:Show()
+end)
+
+LogoImage:SetScript("OnLeave", function()
+    isMouseOverLogo=false
+    GameTooltip:Hide()
+end)
+
+
+local isMouseLeftOn=false
+local isMouseMiddleOn=false
+local isMouseRightOn=false
+
+
+-- Handle click events
+LogoImage:SetScript("OnMouseUp", function(self, button)
+    --print("OnClick triggered with button:", button)
+    if button == "LeftButton" then isMouseLeftOn = false end
+    if button == "MiddleButton" then isMouseMiddleOn = false end
+    if button == "RightButton" then isMouseRightOn = false end
+        
+   
+   
+end)-- Handle click events
+
+
+-- Handle click events
+LogoImage:SetScript("OnMouseDown", function(self, button)
+    --print("OnClick triggered with button:", button)
+    if button == "LeftButton" then isMouseLeftOn = true end
+    if button == "MiddleButton" then isMouseMiddleOn = true end
+    if button == "RightButton" then isMouseRightOn = true end
+        --print("Hello, World!")
+   if isMouseLeftOn then 
+        if isMouseRightOn then
+           MEMO.TOGGLE_WINDOWOPEN()
+         end 
+        if isMouseMiddleOn then
+            ClipboardFunction:SetText("Copy Past Me:\nHow to use the addon:\n https://github.com/EloiStree/2024_01_18_EloiLabWowAddon")
+        end
+    else
+
+        if isMouseRightOn then
+            ClipboardFunction:SetText("Copy Past Me:\nLearn To code with Warcraft: \nhttps://github.com/EloiStree/HelloWarcraftQAXR")
+         end 
+        if isMouseMiddleOn then
+            ClipboardFunction:SetText("Copy Past Me:\nHow to use the addon:\n https://github.com/EloiStree/2024_01_18_EloiLabWowAddon")
+        end
+    end
+   
+end)-- Handle click events
+
+
+
+
+LogoImage:SetScript("OnChar", function(self, button)
+
+    if isMouseOverLogo and button == "y" then
+        ELP.Print("Tag")
+        MEMO.SetTagMode("Tag")
+    end
+    if isMouseOverLogo and button == "u" then
+        ELP.Print("Type")
+        MEMO.SetTagMode("Type")
+    end
+    if isMouseOverLogo and button == "i" then
+        ELP.Print("Index")
+        MEMO.SetTagMode("Index")
+    end
+    if isMouseOverLogo and button == "o" then
+        ELP.Print("Value")
+        MEMO.SetTagMode("Value")
+        
+    end
+    if isMouseOverLogo and button == "e" then
+        MEMO.SetTagMode("Value")
+    end
+    if isMouseOverLogo and button == "b" then
+        MEMO.ToggleBlindMode()
+        CheckForBlindMode()
+    end
+
+    if LogoDebugMode.charDebugMode then 
+        print("OnChar:", button)
+    end 
+    
+end)
+
+LogoDebugMode= {}
+LogoDebugMode.charDebugMode=false
+LogoDebugMode.Toogle_charDebugMode = function ()
+     LogoDebugMode.charDebugMode = not LogoDebugMode.charDebugMode
+    end
