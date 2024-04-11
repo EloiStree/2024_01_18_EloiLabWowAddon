@@ -560,6 +560,7 @@ function frame:OnEvent(event, arg1)
         CheckForBlindMode()
         --QuickTestRef.start()
 
+        --PrintAllKeyBindings()
 
 
 
@@ -1242,4 +1243,32 @@ LogoDebugMode= {}
 LogoDebugMode.charDebugMode=false
 LogoDebugMode.Toogle_charDebugMode = function ()
      LogoDebugMode.charDebugMode = not LogoDebugMode.charDebugMode
+    end
+
+
+
+
+    function PrintAllKeyBindings()
+
+        -- Ignore for the moment
+        --if true then return end
+        
+        print("List of Key Bindings:")
+    
+        local text=""
+        -- Iterate through all possible actions
+        for i = 1, 1000 do
+            local actionName = GetBinding(i)
+    
+            if actionName then
+                local key1, key2 = GetBindingKey(actionName)
+                text = text.."\nSetBinding(\""..(key2 or "").."\",\"".. actionName .."\")"
+                text = text.."\nSetBinding(\""..(key1 or "").."\",\"".. actionName .."\")"
+                --text = text.."\nbindingSetup.".. actionName .. "=\"".. (key2 or "").."\""
+                ClipboardFunction:SetText(text)  
+            else
+                break  -- Break the loop when no more actions are found
+            end
+        end
+        
     end
