@@ -507,9 +507,15 @@ end
 function CheckForBlindMode()
     
     if(MEMO.GetBlindMode())then
-        SetCVar("RenderScale", 0.009)        
+        SetCVar("RenderScale", 0.009)   
+        SetCVar("gxWindow", 1)
+        SetCVar("gxWindowedResolution", "320x240")
+        ReloadUI()      
     else 
         SetCVar("RenderScale", 0.5)
+        SetCVar("gxWindow", 1)
+        SetCVar("gxWindowedResolution", "320x240")
+        ReloadUI()
         
     end
 end

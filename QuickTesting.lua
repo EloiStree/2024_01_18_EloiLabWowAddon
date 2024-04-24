@@ -9,7 +9,7 @@ QuickTestRef ={}
 QuickTestRef.start= function ()
 
 
-
+    print("Quick Test")
     local createMacroCommand = '/run CreateMacro("Macro","INV_MISC_QUESTIONMARK", nil)'
 
 
@@ -44,14 +44,14 @@ QuickTestRef.start= function ()
     dicoSetup.showTutorials=0
     dicoSetup.autoLootRate=0
 
-    dicoSetup.Sound_AmbienceVolume=1
+    dicoSetup.Sound_AmbienceVolume=0
     dicoSetup.Sound_DialogVolume=0
     dicoSetup.ChatMusicVolume	=0
     dicoSetup.ChatSoundVolume= 0
     dicoSetup.Sound_MasterVolume=1
     dicoSetup.Sound_MusicVolume=0
     dicoSetup.Sound_PingVolume=0
-    dicoSetup.Sound_SFXVolume=0
+    dicoSetup.Sound_SFXVolume=1
     dicoSetup.maxFPS=1
     dicoSetup.maxFPSBk=1
     dicoSetup.maxFPSLoading=1
@@ -78,8 +78,20 @@ QuickTestRef.start= function ()
     dicoSetup.SkyCloudLOD=0
     -- Can we go down ?
     ---- Min  0.009
-    
-    dicoSetup.renderscale=0.2
+    -- /console gxWindow 1
+    -- /console gxWindowedResolution "640x480"
+    -- /console RenderScale 0.1
+    -- /reload
+    SetCVar("gxWindow", 1)
+    SetCVar("RenderScale", 0.01)
+    SetCVar("gxWindowedResolution", "640x480")
+    SetCVar("gxWindowedResolution", "320x240")
+    ReloadUI()
+
+    -- Apply changes
+    --dicoSetup.renderscale=0.2
+    --print("R 0.009")
+    --dicoSetup.renderscale=0.009
    -- dicoSetup.renderscale=0.009
     --dicoSetup.renderscale=0.5
     dicoSetup.graphicsShadowQuality=0
@@ -1018,4 +1030,8 @@ function SetBindingFromDico(dicoSetup)
     
 end
 
+print("QStart")
 QuickTestRef.start();
+print("QEnd")
+
+ReloadUI()
