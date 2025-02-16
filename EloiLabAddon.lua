@@ -656,6 +656,22 @@ function getCoordinateColor()
     return posX,posY,facing,1
 end
 
+function getWorldPosition(trueXFalseY)
+    local isInDonjon = IsInInstance()
+    local px=0
+    local py=0
+    local pz=0 
+    if not isDonjon then
+        px, py,pz = UnitPosition("player")
+    end
+    local intPosition = trueXFalseY and px * 100 or py * 100
+    local byte1 = bit.band(intPosition, 0xFF)
+    local byte2 = bit.band(bit.rshift(intPosition, 8), 0xFF)
+    local byte3 = bit.band(bit.rshift(intPosition, 16), 0xFF)
+
+    return byte1/255.0,byte2/255.0,byte3/255.0 
+end
+
 
 function getPlayerPosition()
     -- Get player position and facing angle
@@ -713,6 +729,42 @@ positionColor:SetScript("OnUpdate", function(self, elapsed)
     local r, g, b = getCoordinateColor()
     texture:SetColorTexture(r, g, b)
 end)
+
+local positionColorXOffset = -25
+local positionColorYOffset = -50
+local positionColorSize = 20
+local positionColorX = CreateFrame("Frame", nil, UIParent)
+positionColorX:SetSize(positionColorSize, positionColorSize)
+positionColorX:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
+
+local texture = positionColorX:CreateTexture(nil, "BACKGROUND")
+texture:SetAllPoints()
+texture:SetColorTexture(1, 1, 1)  -- Initial color
+
+-- Update position color every frame
+positionColorX:SetScript("OnUpdate", function(self, elapsed)
+    local r, g, b = getWorldPosition(true)
+    texture:SetColorTexture(r, g, b)
+end)
+
+
+local positionColorXOffset = -25
+local positionColorYOffset = -75
+local positionColorSize = 20
+local positionColorY = CreateFrame("Frame", nil, UIParent)
+positionColorY:SetSize(positionColorSize, positionColorSize)
+positionColorY:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
+
+local texture = positionColorY:CreateTexture(nil, "BACKGROUND")
+texture:SetAllPoints()
+texture:SetColorTexture(1, 1, 1)  -- Initial color
+
+-- Update position color every frame
+positionColorY:SetScript("OnUpdate", function(self, elapsed)
+    local r, g, b = getWorldPosition(false)
+    texture:SetColorTexture(r, g, b)
+end)
+
 
 
 
