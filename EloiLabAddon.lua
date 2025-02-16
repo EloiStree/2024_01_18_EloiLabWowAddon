@@ -1,5 +1,20 @@
+local isClassic = false
+local isRetail = false
 
+-- Check if the game is running in any Classic version
+if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or
+   WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC or
+   WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
+    isClassic = true
+end
 
+isRetail= not isClassic
+
+if isClassic then
+    print("The game is running in Classic WoW.")
+else
+    print("The game is running in Retail WoW.")
+end
 
 
 --CameraZoomOut(increment)
@@ -7,7 +22,6 @@
 -- WANT TO CUSTOM YOUR OWN ?
 -- TRY ON WEAK AURA THEN OVERWRITE "GetMetaInfo"
 -- REPLACE THIS FUNCTION TO ADD YOUR OWN CODE FOR YOUR TOOL.
-
 
 
 
@@ -510,12 +524,16 @@ function CheckForBlindMode()
         SetCVar("RenderScale", 0.009)   
         SetCVar("gxWindow", 1)
         SetCVar("gxWindowedResolution", "320x240")
-        ReloadUI()      
+        if isRetail then
+            ReloadUI()      
+        end
     else 
         SetCVar("RenderScale", 0.5)
         SetCVar("gxWindow", 1)
         SetCVar("gxWindowedResolution", "320x240")
-        ReloadUI()
+        if isRetail then
+            ReloadUI()      
+        end
         
     end
 end
@@ -578,6 +596,199 @@ function frame:OnEvent(event, arg1)
 end
 
 
+
+
+
+
+------------------ COLORSTART
+
+-- Create the main frame
+local mainFrame = CreateFrame("Frame", nil, UIParent)
+mainFrame:SetSize(800, 4)  -- Adjust height to 4 for 4 lines
+mainFrame:SetPoint("TOPLEFT")  
+mainFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+
+-- Create 800 individual 1px wide textures for each of the 4 lines
+local textures = {}
+for line = 0, 3 do  -- Loop for 4 lines
+    for i = 1, 800 do
+        local texture = mainFrame:CreateTexture()
+        texture:SetSize(1, 1)  -- 1px width, 1px height for each texture
+        texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", i - 1, -line)  -- Position each texture to the right of the previous one and below the previous line
+        texture:SetColorTexture(1, 0, 0)  -- Set texture color (Red for demonstration)
+        table.insert(textures, texture)  -- Store the texture in a table
+    end
+end
+
+-- Define a variable for time or animation effect
+local timeElapsed = 0
+
+-- Update function that runs every frame
+mainFrame:SetScript("OnUpdate", function(self, elapsed)
+    local textToDisplayAsColor = StaticMetaInfo.text or "No text"  -- Get the text to display as color
+    timeElapsed = timeElapsed + elapsed  -- Increment the time elapsed since the last frame
+    local textLength = strlen(textToDisplayAsColor)  -- Get the length of the text in UTF-8 characters using WoW API
+    -- Example animation: Shift the colors over time
+    if timeElapsed > 0.1 then  -- Change after 1 second
+        for i = 1, #textures do
+            if i+3 < textLength then
+                local r = string.byte(textToDisplayAsColor, i)/255 or 0
+                local g = string.byte(textToDisplayAsColor, i+1)/255 or 0
+                local b = string.byte(textToDisplayAsColor, i+2)/255 or 0
+                textures[i]:SetColorTexture(r, g, b)  -- Update the texture's color
+            else
+                textures[i]:SetColorTexture(1,0,0)  -- Update the texture's color
+            end
+        end
+        timeElapsed = 0  -- Reset the time
+    end
+end)
+
+function getCoordinateColor()
+    
+    
+    local map = C_Map.GetBestMapForUnit("player");
+    local pos = C_Map.GetPlayerMapPosition(map,"player");
+    local posX,posY = pos:GetXY()
+    local facing = (GetPlayerFacing() / (2*3.1418))
+    
+    
+    return posX,posY,facing,1
+end
+
+
+function getPlayerPosition()
+    -- Get player position and facing angle
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then
+        return "Position: Unknown"
+    end
+
+    local position = C_Map.GetPlayerMapPosition(mapID, "player")
+    if not position then
+        return "Position: Unknown"
+    end
+
+    local x, y = position:GetXY()
+    x = math.floor(x * 10000) / 100 -- Convert to percentage and round
+    y = math.floor(y * 10000) / 100
+
+    local isInDonjon = IsInInstance()
+    local px=0
+    local py=0
+    local pz=0 
+    if not isDonjon then
+        px, py,pz = UnitPosition("player")
+    end
+
+
+    local facing = GetPlayerFacing()
+    if not facing then
+        return string.format("X: %.2f, Y: %.2f, Angle: Unknown", x, y)
+    end
+
+    local angle = math.deg(facing)
+    if angle < 0 then
+        angle = angle + 360
+    end
+
+    -- Return formatted string
+    return string.format("X: %.2f, Y: %.2f\nX: %.2f Y: %.2f \nAngle: %.2f°",px, py, x, y, angle)
+end
+
+
+local positionColorXOffset = -25
+local positionColorYOffset = -25
+local positionColorSize = 20
+local positionColor = CreateFrame("Frame", nil, UIParent)
+positionColor:SetSize(positionColorSize, positionColorSize)
+positionColor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
+
+local texture = positionColor:CreateTexture(nil, "BACKGROUND")
+texture:SetAllPoints()
+texture:SetColorTexture(1, 1, 1)  -- Initial color
+
+-- Update position color every frame
+positionColor:SetScript("OnUpdate", function(self, elapsed)
+    local r, g, b = getCoordinateColor()
+    texture:SetColorTexture(r, g, b)
+end)
+
+
+
+-- Create a frame to display player position
+local positionFrame = CreateFrame("Frame", "PositionFrame", UIParent)
+positionFrame:SetSize(UIParent:GetWidth() * 0.3, UIParent:GetHeight() * 0.05)
+positionFrame:SetPoint("TOP", 0, -10)
+
+
+
+
+-- Add an EditBox to the frame for text display
+positionFrame.editBox = CreateFrame("EditBox", nil, positionFrame)
+positionFrame.editBox:SetAllPoints(true)
+positionFrame.editBox:SetMultiLine(true)
+positionFrame.editBox:SetAutoFocus(false)
+positionFrame.editBox:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
+positionFrame.editBox:SetJustifyH("CENTER")
+positionFrame.editBox:SetScript("OnEscapePressed", function() positionFrame:Hide() end)
+
+-- Function to set text in the EditBox
+positionFrame.SetText = function(self, text)
+    self.editBox:SetText(text)
+    self.editBox:SetTextColor(1, 0, 0)  -- Set text color to red
+end
+
+
+-- Update the position text every frame
+positionFrame:SetScript("OnUpdate", function(self, elapsed)
+    self:SetText(getPlayerPosition())
+end)
+
+-- Show the frame
+positionFrame:Show()
+
+
+
+
+
+--------------------COLOR STOP
+-- local textExport = "Bonjour, j'aime les frites."
+-- local numPixelsPerRow = 800  -- Pixels per row
+-- local textMaxSize= numberPixelsPerRow*3
+-- local numRows = 3  -- Number of rows
+
+-- local pixels = {}  -- Store pixel frames
+
+-- -- Create pixels
+-- for row = 0, numRows - 1 do
+--     for i = 0, numPixelsPerRow - 1 do
+--         local pixel = CreateFrame("Frame", nil, UIParent)
+--         pixel:SetSize(1, 1)  -- Keep size 1x1
+--         pixel:SetPoint("TOPLEFT", UIParent, "TOPLEFT", i, -row)  -- Position in grid
+--         pixel:SetFrameStrata("TOOLTIP")  -- Set to highest priority
+
+--         local texture = pixel:CreateTexture(nil, "ARTWORK")
+--         texture:SetAllPoints()
+--         pixel.texture = texture  -- Store reference for updates
+
+--         table.insert(pixels, pixel)  -- Store in table
+--     end
+-- end
+
+-- -- Function to update pixels every frame
+-- local function UpdatePixels(self, elapsed)
+--     for _, pixel in pairs(pixels) do
+--         pixel.texture:SetColorTexture(math.random(), math.random(), math.random(), 1)  -- Random color
+--     end
+-- end
+
+-- Create an updater frame
+local updater = CreateFrame("Frame")
+updater:SetFrameStrata("TOOLTIP")  -- Highest priority for updater too
+updater:SetScript("OnUpdate", UpdatePixels)  -- Runs UpdatePixels every frame
+
+------------------- COLOREND
 
 function RunTestLuaText(luaCodeText)
 
@@ -724,7 +935,12 @@ function frame:OnUpdate(aElapsed)
         if StaticMetaInfo.text == nil then
             StaticMetaInfo.text= "Nil returned"
         else 
+            local displayGameIn=false
+            if displayGameIn then
             DebugMemoryTextFrame:SetTextContent("GATE IN:\n"..gateInReceived .."\n\n\nGATE OUT:\n"..StaticMetaInfo.text )
+            else
+                DebugMemoryTextFrame:SetTextContent("\n\n"..StaticMetaInfo.text )
+            end
             
             if(string.lower(previousLua) ~= string.lower(gateInReceived)) then 
                 --print("II")
