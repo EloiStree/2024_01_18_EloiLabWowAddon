@@ -601,6 +601,10 @@ end
 
 
 ------------------ COLORSTART
+local screenHeight = GetScreenHeight()
+local screenWidth = GetScreenWidth()
+print("Screen Height: " .. screenHeight)
+print("Screen Width: " .. screenWidth)
 
 -- Create the main frame
 local mainFrame = CreateFrame("Frame", nil, UIParent)
@@ -609,13 +613,23 @@ mainFrame:SetPoint("TOPLEFT")
 mainFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 
 -- Create 800 individual 1px wide textures for each of the 4 lines
+local blockTextWidth = 3
+local blockTextHeight = 600
 local textures = {}
-for line = 0, 3 do  -- Loop for 4 lines
-    for i = 1, 800 do
+for line = 1, blockTextHeight do  -- Loop for 4 lines
+    for column = 1, blockTextWidth do
         local texture = mainFrame:CreateTexture()
         texture:SetSize(1, 1)  -- 1px width, 1px height for each texture
-        texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", i - 1, -line)  -- Position each texture to the right of the previous one and below the previous line
-        texture:SetColorTexture(1, 0, 0)  -- Set texture color (Red for demonstration)
+        texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", column+1,-line)  -- Position each texture
+        if line == 1 then
+            texture:SetColorTexture(1, 0, 1)  -- Set texture color (Red for demonstration)
+        elseif line == 2 then
+            texture:SetColorTexture(1, 0, 1)  -- Set texture color (Green for demonstration)
+        elseif line == 3 then
+            texture:SetColorTexture(1, 0, 1)  -- Set texture color (Blue for demonstration)
+        else
+            texture:SetColorTexture(1, 0, 1)  -- Set texture color (White for demonstration)
+        end
         table.insert(textures, texture)  -- Store the texture in a table
     end
 end
@@ -625,24 +639,28 @@ local timeElapsed = 0
 
 -- Update function that runs every frame
 mainFrame:SetScript("OnUpdate", function(self, elapsed)
-    local textToDisplayAsColor = StaticMetaInfo.text or "No text"  -- Get the text to display as color
+    local textToDisplayAsColor = StaticMetaInfo and StaticMetaInfo.text or "No text"  -- Get the text to display as color
     timeElapsed = timeElapsed + elapsed  -- Increment the time elapsed since the last frame
-    local textLength = strlen(textToDisplayAsColor)  -- Get the length of the text in UTF-8 characters using WoW API
-    -- Example animation: Shift the colors over time
-    if timeElapsed > 0.1 then  -- Change after 1 second
-        for i = 1, #textures do
-            if i+3 < textLength then
-                local r = string.byte(textToDisplayAsColor, i)/255 or 0
-                local g = string.byte(textToDisplayAsColor, i+1)/255 or 0
-                local b = string.byte(textToDisplayAsColor, i+2)/255 or 0
-                textures[i]:SetColorTexture(r, g, b)  -- Update the texture's color
+    if timeElapsed > 0.1 then 
+        local textLength = strlen(textToDisplayAsColor)  -- Get the length of the text in UTF-8 characters using WoW API
+        local arraySize = blockTextWidth * blockTextHeight
+        local index=1    
+        while index+2 < arraySize do
+            if index + 2 < textLength then
+                local r = string.byte(textToDisplayAsColor, index) / 255
+                local g = string.byte(textToDisplayAsColor, index + 1) / 255
+                local b = string.byte(textToDisplayAsColor, index + 2) / 255
+                textures[index]:SetColorTexture(r, g, b)  -- Update the texture's color
             else
-                textures[i]:SetColorTexture(1,0,0)  -- Update the texture's color
+            
+                textures[index]:SetColorTexture(1, 1, 1)  -- Set texture color (White for demonstration)
             end
-        end
+            index=index+3
+        end 
         timeElapsed = 0  -- Reset the time
     end
 end)
+
 
 function getCoordinateColor()
     
