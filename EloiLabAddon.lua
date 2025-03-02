@@ -613,22 +613,30 @@ mainFrame:SetPoint("TOPLEFT")
 mainFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 
 -- Create 800 individual 1px wide textures for each of the 4 lines
-local blockTextWidth = 3
+local blockTextWidth = 4
 local blockTextHeight = 600
+local blockTotaleSize = blockTextWidth * blockTextHeight
+local scalePerPixelWidth = screenWidth/800
+local scalePerPixelHeight = screenHeight/600
+print ("Scale per pixel width: "..scalePerPixelWidth)
+print ("Scale per pixel height: "..scalePerPixelHeight)
 local textures = {}
-for line = 1, blockTextHeight do  -- Loop for 4 lines
-    for column = 1, blockTextWidth do
+for line = 0, blockTextHeight-1 do  -- Loop for 4 lines
+    for column = 0, blockTextWidth-1 do
         local texture = mainFrame:CreateTexture()
-        texture:SetSize(1, 1)  -- 1px width, 1px height for each texture
-        texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", column+1,-line)  -- Position each texture
+        texture:SetSize(scalePerPixelWidth, scalePerPixelHeight)  -- Scale size for each texture
+        texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT",
+         (column ) * scalePerPixelWidth,
+         -(line) * scalePerPixelHeight) 
+
         if line == 1 then
             texture:SetColorTexture(1, 0, 1)  -- Set texture color (Red for demonstration)
         elseif line == 2 then
-            texture:SetColorTexture(1, 0, 1)  -- Set texture color (Green for demonstration)
+            texture:SetColorTexture(0, 1, 0)  -- Set texture color (Green for demonstration)
         elseif line == 3 then
-            texture:SetColorTexture(1, 0, 1)  -- Set texture color (Blue for demonstration)
+            texture:SetColorTexture(0, 0, 1)  -- Set texture color (Blue for demonstration)
         else
-            texture:SetColorTexture(1, 0, 1)  -- Set texture color (White for demonstration)
+            texture:SetColorTexture(1, 1, 1)  -- Set texture color (White for demonstration)
         end
         table.insert(textures, texture)  -- Store the texture in a table
     end
@@ -639,24 +647,34 @@ local timeElapsed = 0
 
 -- Update function that runs every frame
 mainFrame:SetScript("OnUpdate", function(self, elapsed)
-    local textToDisplayAsColor = StaticMetaInfo and StaticMetaInfo.text or "No text"  -- Get the text to display as color
+    local textToDisplayAsColor ="  "..(StaticMetaInfo and StaticMetaInfo.text or "No text")  -- Get the text to display as color
+    --textToDisplayAsColor = "Bonjour, j'aime les frites."  -- Get the text to display as color
     timeElapsed = timeElapsed + elapsed  -- Increment the time elapsed since the last frame
+
+    -- local maxTextSize =blockTotaleSize-1*3
+    -- if #textToDisplayAsColor > maxTextSize then
+    --     textToDisplayAsColor = string.sub(textToDisplayAsColor, 1, maxTextSize)  -- Limit the text to 800 characters
+    -- end
+
+
+    --print("Count ".. #textToDisplayAsColor)
     if timeElapsed > 0.1 then 
-        local textLength = strlen(textToDisplayAsColor)  -- Get the length of the text in UTF-8 characters using WoW API
-        local arraySize = blockTextWidth * blockTextHeight
-        local index=1    
-        while index+2 < arraySize do
-            if index + 2 < textLength then
-                local r = string.byte(textToDisplayAsColor, index) / 255
-                local g = string.byte(textToDisplayAsColor, index + 1) / 255
-                local b = string.byte(textToDisplayAsColor, index + 2) / 255
-                textures[index]:SetColorTexture(r, g, b)  -- Update the texture's color
-            else
-            
-                textures[index]:SetColorTexture(1, 1, 1)  -- Set texture color (White for demonstration)
+        local textLength = #textToDisplayAsColor  -- Get the length of the text in UTF-8 characters using WoW API
+        --print("Text and array size "..textLength.." "..arraySize)
+        for i=1, blockTotaleSize do
+            local indexInArray = i
+            local indexInText = indexInArray*3
+            if (indexInText + 2) < textLength then
+                local r = string.byte(textToDisplayAsColor, indexInText) / 255
+                local g = string.byte(textToDisplayAsColor, indexInText + 1) / 255
+                local b = string.byte(textToDisplayAsColor, indexInText + 2) / 255
+                
+               
+                textures[indexInArray]:SetColorTexture(r, g, b)  -- Update the texture's color
+            else    
+                textures[indexInArray]:SetColorTexture(1, 0, 1)  -- Set texture color (White for demonstration)
             end
-            index=index+3
-        end 
+        end
         timeElapsed = 0  -- Reset the time
     end
 end)
@@ -674,20 +692,38 @@ function getCoordinateColor()
     return posX,posY,facing,1
 end
 
+
+
+function getHealAndXp()
+    
+    local xp = UnitXP("player")
+    local playerLevel = UnitLevel("player")    
+    local percentXp = xp / UnitXPMax("player")
+    local percentHealth = UnitHealth("player") / UnitHealthMax("player")
+    
+    return playerLevel/100.0 , percentHealth , percentXp, 1
+end
+
 function getWorldPosition(trueXFalseY)
     local isInDonjon = IsInInstance()
-    local px=0
-    local py=0
-    local pz=0 
-    if not isDonjon then
-        px, py,pz = UnitPosition("player")
-    end
-    local intPosition = trueXFalseY and px * 100 or py * 100
-    local byte1 = bit.band(intPosition, 0xFF)
-    local byte2 = bit.band(bit.rshift(intPosition, 8), 0xFF)
-    local byte3 = bit.band(bit.rshift(intPosition, 16), 0xFF)
+    local px, py, pz = 0, 0, 0
 
-    return byte1/255.0,byte2/255.0,byte3/255.0 
+    -- Fetch player position if not in an instance
+    if not isInDonjon then
+        px, py, pz = UnitPosition("player")
+    end
+
+    -- Choose the coordinate to encode (x or y)
+    local coordinate = trueXFalseY and px or py
+
+    -- Scale the coordinate to fit into RGB values
+    local scaledCoordinate = coordinate * 100.0
+
+    -- Extract RGB values
+    local r = (scaledCoordinate % 100.0) / 100.0
+    local g = ((scaledCoordinate / 100.0) % 100.0) / 100.0
+    local b = ((scaledCoordinate / 10000.0) % 100.0) / 100.0
+    return r, g, b
 end
 
 
@@ -731,11 +767,12 @@ function getPlayerPosition()
 end
 
 
-local positionColorXOffset = -25
-local positionColorYOffset = -25
-local positionColorSize = 20
+local positionColorXOffset = 0
+local positionColorYOffset = -0
+local positionColorSize = 5
+local positionColorHeight= 200
 local positionColor = CreateFrame("Frame", nil, UIParent)
-positionColor:SetSize(positionColorSize, positionColorSize)
+positionColor:SetSize(positionColorSize, positionColorHeight)
 positionColor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
 
 local texture = positionColor:CreateTexture(nil, "BACKGROUND")
@@ -748,11 +785,12 @@ positionColor:SetScript("OnUpdate", function(self, elapsed)
     texture:SetColorTexture(r, g, b)
 end)
 
-local positionColorXOffset = -25
-local positionColorYOffset = -50
-local positionColorSize = 20
+local positionColorXOffset = 0
+local positionColorYOffset = -200
+local positionColorSize = 5
+local positionColorHeight= 200
 local positionColorX = CreateFrame("Frame", nil, UIParent)
-positionColorX:SetSize(positionColorSize, positionColorSize)
+positionColorX:SetSize(positionColorSize, positionColorHeight)
 positionColorX:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
 
 local texture = positionColorX:CreateTexture(nil, "BACKGROUND")
@@ -766,11 +804,12 @@ positionColorX:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 
-local positionColorXOffset = -25
-local positionColorYOffset = -75
-local positionColorSize = 20
+local positionColorXOffset = 0
+local positionColorYOffset = -400
+local positionColorSize = 5
+local positionColorHeight= 200
 local positionColorY = CreateFrame("Frame", nil, UIParent)
-positionColorY:SetSize(positionColorSize, positionColorSize)
+positionColorY:SetSize(positionColorSize, positionColorHeight)
 positionColorY:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
 
 local texture = positionColorY:CreateTexture(nil, "BACKGROUND")
@@ -782,6 +821,31 @@ positionColorY:SetScript("OnUpdate", function(self, elapsed)
     local r, g, b = getWorldPosition(false)
     texture:SetColorTexture(r, g, b)
 end)
+
+
+
+
+local healXpColorXOffset = 0
+local healXpColorYOffset = -600
+local healXpColorSize = 5
+local healXpColorHeight= 200
+
+-- Create the frame
+local healXp = CreateFrame("Frame", nil, UIParent)
+healXp:SetSize(healXpColorSize, healXpColorHeight)
+healXp:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", healXpColorXOffset, healXpColorYOffset)
+
+-- Create the texture
+local texture = healXp:CreateTexture(nil, "BACKGROUND")
+texture:SetAllPoints()
+texture:SetColorTexture(1, 1, 1)  -- Initial color (white)
+
+-- Update position and color every frame
+healXp:SetScript("OnUpdate", function(self, elapsed)
+    local r, g, b = getHealAndXp()  -- Get the color values from the function
+    texture:SetColorTexture(r, g, b) -- Update the texture color
+end)
+
 
 
 
