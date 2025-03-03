@@ -778,7 +778,7 @@ end
 
 local positionColorXOffset = 0
 local positionColorYOffset = -0
-local positionColorSize = 5
+local positionColorSize = 10
 local positionColorHeight= 200
 local positionColor = CreateFrame("Frame", nil, UIParent)
 positionColor:SetSize(positionColorSize, positionColorHeight)
@@ -796,7 +796,7 @@ end)
 
 local positionColorXOffset = 0
 local positionColorYOffset = -200
-local positionColorSize = 5
+local positionColorSize = 10
 local positionColorHeight= 200
 local positionColorX = CreateFrame("Frame", nil, UIParent)
 positionColorX:SetSize(positionColorSize, positionColorHeight)
@@ -815,7 +815,7 @@ end)
 
 local positionColorXOffset = 0
 local positionColorYOffset = -400
-local positionColorSize = 5
+local positionColorSize = 10
 local positionColorHeight= 200
 local positionColorY = CreateFrame("Frame", nil, UIParent)
 positionColorY:SetSize(positionColorSize, positionColorHeight)
@@ -836,7 +836,7 @@ end)
 
 local healXpColorXOffset = 0
 local healXpColorYOffset = -600
-local healXpColorSize = 5
+local healXpColorSize = 10
 local healXpColorHeight= 200
 
 -- Create the frame
