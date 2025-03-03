@@ -701,7 +701,7 @@ function getHealAndXp()
     local percentXp = xp / UnitXPMax("player")
     local percentHealth = UnitHealth("player") / UnitHealthMax("player")
     
-    return playerLevel/100.0 , percentHealth , percentXp, 1
+    return playerLevel/255 , percentHealth , percentXp, 1
 end
 
 function getWorldPosition(trueXFalseY)
@@ -715,15 +715,24 @@ function getWorldPosition(trueXFalseY)
 
     -- Choose the coordinate to encode (x or y)
     local coordinate = trueXFalseY and px or py
+    local r, g, b = 0, 0, 0
+    -- -347321 
+    -- r =34
+    -- g = 73
+    -- b = 21
+    -- if is negative r = r+100
+    local isNegative = coordinate < 0
+    --print ("Coordinate "..coordinate)
+    coordinate = math.abs(coordinate)
+    local b = math.floor(coordinate) %100 
+    local g = math.floor(coordinate / 100.0)%100
+    local r = math.floor(coordinate / 10000.0)%100
+    if isNegative then
+        r = r + 100
+    end
+    -- print ("RGB "..r.." "..g.." "..b)
+    return r/255.0, g/255.0, b/255.0
 
-    -- Scale the coordinate to fit into RGB values
-    local scaledCoordinate = coordinate * 100.0
-
-    -- Extract RGB values
-    local r = (scaledCoordinate % 100.0) / 100.0
-    local g = ((scaledCoordinate / 100.0) % 100.0) / 100.0
-    local b = ((scaledCoordinate / 10000.0) % 100.0) / 100.0
-    return r, g, b
 end
 
 
