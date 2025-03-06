@@ -757,7 +757,7 @@ function getPlayerPosition()
     local py=0
     local pz=0 
     if not isDonjon then
-        px, py,pz = UnitPosition("player")
+        py, px,pz = UnitPosition("player")
     end
 
 
