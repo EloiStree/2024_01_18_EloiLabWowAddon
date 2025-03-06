@@ -710,7 +710,7 @@ function getWorldPosition(trueXFalseY)
 
     -- Fetch player position if not in an instance
     if not isInDonjon then
-        px, py, pz = UnitPosition("player")
+        py, px, pz = UnitPosition("player")
     end
 
     -- Choose the coordinate to encode (x or y)
@@ -757,7 +757,7 @@ function getPlayerPosition()
     local py=0
     local pz=0 
     if not isDonjon then
-        px, py,pz = UnitPosition("player")
+        py, px,pz = UnitPosition("player")
     end
 
 
