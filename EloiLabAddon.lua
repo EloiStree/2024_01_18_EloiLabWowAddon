@@ -857,11 +857,12 @@ end)
 
 
 
-
+local withdPercentTextCoord =0.6
+local heightPercentTextCoord =0.1
 
 -- Create a frame to display player position
 local positionFrame = CreateFrame("Frame", "PositionFrame", UIParent)
-positionFrame:SetSize(UIParent:GetWidth() * 0.3, UIParent:GetHeight() * 0.05)
+positionFrame:SetSize(UIParent:GetWidth() * withdPercentTextCoord, UIParent:GetHeight() * heightPercentTextCoord)
 positionFrame:SetPoint("TOP", 0, -10)
 
 
