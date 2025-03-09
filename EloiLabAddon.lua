@@ -875,6 +875,7 @@ positionFrame.editBox:SetMultiLine(true)
 positionFrame.editBox:SetAutoFocus(false)
 positionFrame.editBox:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
 positionFrame.editBox:SetJustifyH("CENTER")
+positionFrame.editBox:EnableMouse(fales)  -- Enable mouse for the EditBox
 positionFrame.editBox:SetScript("OnEscapePressed", function() positionFrame:Hide() end)
 
 -- Function to set text in the EditBox

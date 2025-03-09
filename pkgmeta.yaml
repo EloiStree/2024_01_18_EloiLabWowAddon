@@ -1,0 +1,24 @@
+# pkgmeta.yaml
+
+# NOTE: I am not a LUA developer by carrier.
+
+version: "2025.3.5"  # Update this when you release new versions.
+root:
+  folder: "EloiLab"        # All files will be placed inside a folder named "MyAddon" in the archive.
+metadata:
+  author: "Eloi Stree"     
+  description: "This tool enables automated bot battles by extracting and showcasing data from the public WoW API, complete with an integrated color picker."  # A concise overview of the addon's functionality.
+  license: "Beerware"
+
+# # Specify which files and directories to include or exclude.
+# files:
+#   # List files or patterns to include in the packaged release.
+#   include:
+#     - "EloiLab.toc"        # The main table-of-contents file.
+#     - "Lua/**/*.lua"       # All Lua files in the Lua directory and its subdirectories.
+#     - "Assets/**/*"        # Include all asset files (e.g., images, XMLs).
+#   # List files or patterns to exclude from the package.
+#   exclude:
+#     - "docs/**"            # Exclude documentation files.
+#     - "tests/**"           # Exclude test scripts or folders.
+#     - "*.md"               # Exclude markdown files like README.md.
