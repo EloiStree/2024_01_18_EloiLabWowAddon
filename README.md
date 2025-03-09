@@ -61,6 +61,11 @@ You can use:
   - `/elplayerinfoappend` to append the information on the bots you want to report
  - /elua` allows to play a quick LUA scrit from the console
    - Try: `/elua return GetMoney() `
+  
+- You can use morse to load some LUA:
+  - `...` Numpad: `---/` `/reload`
+  - `---` Numpad: `+++/` `/dance`
+  - `...---...` Numpad: `---+++---/` `UseItemByName('Hearthstone')`
 
 
 **Anti-Bot idea & Blizzard Team:**
