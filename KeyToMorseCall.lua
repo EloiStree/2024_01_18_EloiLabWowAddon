@@ -42,8 +42,6 @@ local morse_code_to_lua = {
     ["...---..."] = "UseItemByName('Hearthstone')",  -- Uses the Hearthstone
     ["...."] = "AcceptResurrect()",  -- Accept resurrection (you'll need to check if it's valid to accept a resurrection)
     ["....."] = "FollowUnit('target')",  -- Follow target
-    ["..-"] = 'RunMacro("Bot")',  
-    [".-"] = 'RunMacro("Bots")', 
     ["."]= '/run C_ReportSystem.OpenReportPlayerDialog(PLAYER_REPORT_TYPE_SPAM, UnitName("target"), PlayerLocation:CreateFromUnit("target"))',
     
 }
