@@ -421,7 +421,45 @@ end
 
 
 
+------------ CREATE PLAYER ID FRAME
+
+local frame = CreateFrame("Frame", "TargetIDFrame", UIParent)
+frame:SetSize(200, 50)
+frame:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, UIParent:GetHeight() * 0.002)
+
+frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+frame.text:SetPoint("CENTER")
+frame.text:SetTextColor(0, 1, 0) -- Green color
+
+local no_id = "No ID"
+local function UpdateTargetID()
+    frame.text:SetText(no_id)
+    if UnitExists("target") then
+        local targetGUID = UnitGUID("target")
+        if targetGUID then
+            local targetID = select(6, strsplit("-", targetGUID))
+            if UnitIsPlayer("target") then
+                frame.text:SetText((MEMO.GET_SERVERID() or "EU?US").."-"..targetGUID or no_id)
+            else
+                frame.text:SetText(UnitGUID("target"))
+            end
+        end
+    end
+end
+
+frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+frame:SetScript("OnEvent", UpdateTargetID)
+
+
+frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+frame:SetScript("OnEvent", UpdateTargetID)
+
+
 --||||||||     CREATE THE FRAME       |||||||||
+
+
+
+
 
 
 -- Create the DebugMemoryTextFrame frame
@@ -520,22 +558,22 @@ end
 
 function CheckForBlindMode()
     
-    if(MEMO.GetBlindMode())then
-        SetCVar("RenderScale", 0.009)   
-        SetCVar("gxWindow", 1)
-        SetCVar("gxWindowedResolution", "320x240")
-        if isRetail then
-            ReloadUI()      
-        end
-    else 
-        SetCVar("RenderScale", 0.5)
-        SetCVar("gxWindow", 1)
-        SetCVar("gxWindowedResolution", "320x240")
-        if isRetail then
-            ReloadUI()      
-        end
+    -- if(MEMO.GetBlindMode())then
+    --     SetCVar("RenderScale", 0.009)   
+    --     SetCVar("gxWindow", 1)
+    --     SetCVar("gxWindowedResolution", "320x240")
+    --     if isRetail then
+    --         ReloadUI()      
+    --     end
+    -- else 
+    --     SetCVar("RenderScale", 0.5)
+    --     SetCVar("gxWindow", 1)
+    --     SetCVar("gxWindowedResolution", "320x240")
+    --     if isRetail then
+    --         ReloadUI()      
+    --     end
         
-    end
+    -- end
 end
 
 function frame:OnEvent(event, arg1)
@@ -1157,19 +1195,23 @@ frame:SetScript('OnUpdate', frame.OnUpdate)
     --||||||||    MANAGE SHORTCUT |||||||||
 SLASH_ELOILAB1 = "/eloilab";
 function SlashCmdList.ELOILAB(msg)
-    ELP.Print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
+    ELP.Print("Read me: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon");
     ELP.EndLine("Cmd: /elhelp ");
 end
     --||||||||    MANAGE SHORTCUT |||||||||
 SLASH_ELOILABLIST1 = "/elhelp";
 function SlashCmdList.ELOILABLIST(msg)
 
-    ELP.Print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
+    ELP.Print("Read me: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon");
     ELP.EndLine("- /elwrite : write a note to keep between players");
-    ELP.EndLine("- /elread : read a note to keep between players");
-    ELP.EndLine("- /elcheck : display memory state");
     ELP.EndLine("- /elshow : show info");
     ELP.EndLine("- /elhide : hide info");
+    ELP.EndLine("- /elserver eu|us|?? : Set the server you are on for link generation");
+    ELP.EndLine("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
+    ELP.EndLine("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
+    ELP.EndLine("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
+    ELP.EndLine("MEMORY EXPORT (Advance topic)")
+    ELP.EndLine("- /elcheck : display memory state");
     ELP.EndLine("- /elstart : Start to work and continue when you reload");
     ELP.EndLine("- /elstop : Stop to work and need start to continue after reload");
     ELP.EndLine("- /eltag : Put that address tag in the memory");
@@ -1178,10 +1220,7 @@ function SlashCmdList.ELOILABLIST(msg)
     ELP.EndLine("- /elvalue : Put the value in the memory");
     ELP.EndLine("- /elautotagon : While modulo around 4 tag type value");
     ELP.EndLine("- /elautotagoff : Stop debug mode (require manual now)");
-    ELP.EndLine("- /elserver eu|us|?? : Set the server you are on for link generation");
-    ELP.EndLine("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
-    ELP.EndLine("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
-    ELP.EndLine("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
+
     
 end
 
@@ -1210,7 +1249,7 @@ end
 
 SLASH_ELOILABRTFM1 = "/elrtfm";
 function SlashCmdList.ELOILABRTFM(msg)
-    ELP.Print("Manual: https://github.com/EloiStree/HelloWarcraftQAXR/issues\n" )
+    ELP.Print("Anti-Bot RTFM: github.com/EloiStree/HelloWarcraftQAXR/issues?q=Anti-Bot\n" )
     ELP.EndLine("Code Addons: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon\n")
     ELP.EndLine("Code Memory Reader: https://github.com/EloiStree/2023_12_31_ReadMemoryOfWow\n")
 end
@@ -1227,6 +1266,14 @@ end
 SLASH_ELOILABELOIEDITLUAPRINT1 = "/eluaprintreturn";
 function SlashCmdList.ELOILABELOIEDITLUAPRINT(msg)
     
+    if msg==nil or msg=="" then
+        ELP.Print("No code to execute")
+        return
+    else 
+        ELP.Print(">"..ExecuteCodeAndPrintResult(msg))
+        return 
+    end
+
     --print(("Try Start"))
     ELP.Print(">"..ExecuteCodeAndPrintResult(ClipboardFunction:GetText()))
     --print(("Try End"))
@@ -1236,6 +1283,14 @@ end
 SLASH_ELOILABELOIEDITLUA1 = "/elua";
 function SlashCmdList.ELOILABELOIEDITLUA(msg)
     
+    if msg==nil or msg=="" then
+        ELP.Print("No code to execute")
+        return
+    else 
+        ELP.Print(">"..ExecuteCodeAndPrintResult(msg))
+        return 
+    end
+
     --local success, result = pcall(RunLuaEditorTextUnderCatch)
     RunLuaEditorTextUnderCatch()
 end
@@ -1492,7 +1547,7 @@ local charDebugMode=false
 
 -- Create a frame
 local LogoImage = CreateFrame("Frame", "LogoImage", UIParent)
-LogoImage:SetSize(64, 64)
+LogoImage:SetSize(32, 32)
 LogoImage:SetPoint("CENTER")
 LogoImage:EnableMouse(true)
 LogoImage:SetMovable(true)
@@ -1509,6 +1564,8 @@ local imagePath = "Interface\\AddOns\\EloiLab\\Images\\EloiTeachingLab.tga"
 LogoImageTexture:SetTexture(imagePath)
 LogoImageTexture:SetAllPoints()
 
+LogoImage:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -42, -42)
+
 -- Set the strata and level
 LogoImage:SetFrameStrata("HIGH")  -- Set the strata to "HIGH" to place it above most UI elements
 LogoImage:SetFrameLevel(100)  -- Set the level to a high value
@@ -1517,7 +1574,7 @@ LogoImage:SetFrameLevel(100)  -- Set the level to a high value
 LogoImage:SetScript("OnEnter", function(self)
     isMouseOverLogo=true
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText("Middle:How to use Addon | Right:Learn to Code")
+    GameTooltip:SetText("Click L:Clear | M:Discord | R: Code | Both: Toggle Text")
     GameTooltip:Show()
 end)
 
@@ -1554,17 +1611,20 @@ LogoImage:SetScript("OnMouseDown", function(self, button)
    if isMouseLeftOn then 
         if isMouseRightOn then
            MEMO.TOGGLE_WINDOWOPEN()
-         end 
-        if isMouseMiddleOn then
-            ClipboardFunction:SetText("Copy Past Me:\nHow to use the addon:\n https://github.com/EloiStree/2024_01_18_EloiLabWowAddon")
+        elseif isMouseMiddleOn then
+            ClipboardFunction:SetText("Discord:\nhttps://discord.gg/WnmXsXHbSn")
+        elseif isMouseLeftOn then
+            LuaText.clipboardtext=""
+            ClipboardFunction:SetText("")
+
         end
     else
 
         if isMouseRightOn then
-            ClipboardFunction:SetText("Copy Past Me:\nLearn To code with Warcraft: \nhttps://github.com/EloiStree/HelloWarcraftQAXR")
+            ClipboardFunction:SetText("Code:\nhttps://github.com/EloiStree/2024_01_18_EloiLabWowAddon")
          end 
         if isMouseMiddleOn then
-            ClipboardFunction:SetText("Copy Past Me:\nHow to use the addon:\n https://github.com/EloiStree/2024_01_18_EloiLabWowAddon")
+            ClipboardFunction:SetText("Discord:\nhttps://discord.gg/WnmXsXHbSn")
         end
     end
    
