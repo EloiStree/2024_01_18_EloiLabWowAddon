@@ -32,4 +32,16 @@ If you are botting for educational purposes or to study and counteract bots, do 
 If you want to learn without risking your account, just ask me to launch a client on my Discord, and you can learn remotely from a safe distance.
 
 
+**Anti-Bot idea & Blizzard Team:**
+
+To the Blizzard team reading this Git:
+I will not remove my code if requested because I believe that teaching people how bots work is the best way to learn how to combat them. My goal is to inspire new talent with a passion for coding anti-bot solutions.
+
+Take this as an opportunity to discover skilled individuals who may be interested in helping you fight bots.
+
+I invite you to reach out if you'd like to discuss ideas on how we can tackle this issue together:
+[https://github.com/EloiStree/HelloWarcraftQAXR/issues?q=Anti-Bot%3A%20](https://github.com/EloiStree/HelloWarcraftQAXR/issues?q=Anti-Bot%3A%20)  
+
+
+  
 
