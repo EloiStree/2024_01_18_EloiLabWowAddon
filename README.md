@@ -1,6 +1,4 @@
-Here’s the corrected version of your text with improved spelling and grammar:  
 
----
 
 # Eloi Lab WoW Addon  
 
@@ -25,7 +23,3 @@ This addon contains two main components:
    git clone https://github.com/EloiStree/2024_01_18_EloiLabWowAddon.git "C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns\EloiLab"
    ```  
 3. This works for both retail and classic hardcore modes. (Ping me on [Discord](https://discord.gg/WnmXsXHbSn) if something is broken.)  
-
----
-
-Let me know if you want any more refinements! 🚀
