@@ -432,27 +432,29 @@ frame.text:SetPoint("CENTER")
 frame.text:SetTextColor(0, 1, 0) -- Green color
 
 local no_id = "No ID"
+local focus_id = "mouseover"  -- Change to mouseover instead of target
+
 local function UpdateTargetID()
     frame.text:SetText(no_id)
-    if UnitExists("target") then
-        local targetGUID = UnitGUID("target")
+    if UnitExists(focus_id) then
+        local targetGUID = UnitGUID(focus_id)
         if targetGUID then
             local targetID = select(6, strsplit("-", targetGUID))
-            if UnitIsPlayer("target") then
-                frame.text:SetText((MEMO.GET_SERVERID() or "EU?US").."-"..targetGUID or no_id)
-            else
-                frame.text:SetText(UnitGUID("target"))
+            if UnitIsPlayer(focus_id) then
+                local name, realm = UnitName(focus_id)
+                frame.text:SetText((realm or "No Realm").."-"..(MEMO.GET_SERVERID() or "EU?US").."-"..targetGUID or no_id)
+            else    
+                frame.text:SetText(UnitGUID(focus_id))
             end
         end
     end
 end
 
+-- Using C_Timer.NewTicker to call UpdateTargetID every 0.1 seconds
+C_Timer.NewTicker(0.1, UpdateTargetID)
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 frame:SetScript("OnEvent", UpdateTargetID)
 
-
-frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-frame:SetScript("OnEvent", UpdateTargetID)
 
 
 --||||||||     CREATE THE FRAME       |||||||||
