@@ -30,6 +30,36 @@ If you are botting for educational purposes or to study and counteract bots, do 
 
 If you want to learn without risking your account, just ask me to launch a client on my Discord, and you can learn remotely from a safe distance.
 
+## How to use ?
+**Will probably change when I clean the code.**
+
+``` lua 
+
+SLASH_ELOILABLIST1 = "/elhelp";
+function SlashCmdList.ELOILABLIST(msg)
+
+    ELP.Print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
+    ELP.EndLine("- /elwrite : write a note to keep between players");
+    ELP.EndLine("- /elread : read a note to keep between players");
+    ELP.EndLine("- /elcheck : display memory state");
+    ELP.EndLine("- /elshow : show info");
+    ELP.EndLine("- /elhide : hide info");
+    ELP.EndLine("- /elstart : Start to work and continue when you reload");
+    ELP.EndLine("- /elstop : Stop to work and need start to continue after reload");
+    ELP.EndLine("- /eltag : Put that address tag in the memory");
+    ELP.EndLine("- /elindex : Put the index Tag in the memory");
+    ELP.EndLine("- /eltype : Put the type in the memory");
+    ELP.EndLine("- /elvalue : Put the value in the memory");
+    ELP.EndLine("- /elautotagon : While modulo around 4 tag type value");
+    ELP.EndLine("- /elautotagoff : Stop debug mode (require manual now)");
+    ELP.EndLine("- /elserver eu|us|?? : Set the server you are on for link generation");
+    ELP.EndLine("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
+    ELP.EndLine("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
+    ELP.EndLine("- /elrtfm: Give links to \"Read the fucking manual\". :)- ")
+    
+end
+
+```
 
 **Anti-Bot idea & Blizzard Team:**
 
