@@ -59,6 +59,8 @@ You can use:
 - Now you can create a macro to save the current bot or bots information when you see one.
   - `/elplayerinfo` to set the information on the bot you want to report
   - `/elplayerinfoappend` to append the information on the bots you want to report
+ - /elua` allows to play a quick LUA scrit from the console
+   - Try: `/elua return GetMoney() .. " - ".. GetTimePlayed()`
 
 
 **Anti-Bot idea & Blizzard Team:**
