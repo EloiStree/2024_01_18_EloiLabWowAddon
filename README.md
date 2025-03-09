@@ -41,17 +41,8 @@ function SlashCmdList.ELOILABLIST(msg)
     ELP.Print("Read me: https://github.com/EloiStree/HelloWarcraftQAXR");
     ELP.EndLine("- /elwrite : write a note to keep between players");
     ELP.EndLine("- /elread : read a note to keep between players");
-    ELP.EndLine("- /elcheck : display memory state");
     ELP.EndLine("- /elshow : show info");
     ELP.EndLine("- /elhide : hide info");
-    ELP.EndLine("- /elstart : Start to work and continue when you reload");
-    ELP.EndLine("- /elstop : Stop to work and need start to continue after reload");
-    ELP.EndLine("- /eltag : Put that address tag in the memory");
-    ELP.EndLine("- /elindex : Put the index Tag in the memory");
-    ELP.EndLine("- /eltype : Put the type in the memory");
-    ELP.EndLine("- /elvalue : Put the value in the memory");
-    ELP.EndLine("- /elautotagon : While modulo around 4 tag type value");
-    ELP.EndLine("- /elautotagoff : Stop debug mode (require manual now)");
     ELP.EndLine("- /elserver eu|us|?? : Set the server you are on for link generation");
     ELP.EndLine("- /elplayerinfoappend : Append in the clipboard information about the target and mouseover")
     ELP.EndLine("- /elplayerinfo : Set in the clipboard information about the target and mouseover")
@@ -60,6 +51,15 @@ function SlashCmdList.ELOILABLIST(msg)
 end
 
 ```
+
+You can use: 
+- You have to set the server localisation because it is not in the public API
+  - `/elserver eu` to set that you are on a EU server
+  - `/elserver us` to set that you are on a US server
+- Now you can create a macro to save the current bot or bots information when you see one.
+  - `/elplayerinfo` to set the information on the bot you want to report
+  - `/elplayerinfoappend` to append the information on the bots you want to report
+
 
 **Anti-Bot idea & Blizzard Team:**
 
