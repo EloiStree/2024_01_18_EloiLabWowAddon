@@ -60,7 +60,7 @@ You can use:
   - `/elplayerinfo` to set the information on the bot you want to report
   - `/elplayerinfoappend` to append the information on the bots you want to report
  - /elua` allows to play a quick LUA scrit from the console
-   - Try: `/elua return GetMoney() .. " - ".. GetTimePlayed()`
+   - Try: `/elua return GetMoney() `
 
 
 **Anti-Bot idea & Blizzard Team:**
