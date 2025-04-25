@@ -1,7 +1,7 @@
-## Interface: 110007, 110100
+## Interface: 110100, 110105
 ## Title: |cff0070DE[Eloi Lab Addon |r
 ## Author: Éloi Strée
-## Version: 2025.3.9
+## Version: 2025.4.26
 ## Notes: We fight bots with code. Hacks@Blizzard.com if they hide to fast.
 ## Notes-url: https://github.com/EloiStree/2024_01_18_EloiLabWowAddon
 ## DefaultState: enabled
