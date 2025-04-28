@@ -2,6 +2,8 @@
 
 # Eloi Lab WoW Addon  
 
+Update: ## Interface: 110100, 110105
+
 A laboratory of Lua code in an addon for World of Warcraft to experiment with extracting game data.  
 
 This addon contains two main components:  
