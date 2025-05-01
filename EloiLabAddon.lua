@@ -723,6 +723,12 @@ end)
 function getCoordinateColor()
     
     
+    -- is in donjon
+    local isInDonjon = IsInInstance()
+    if isInDonjon then
+        return 0, 0, 0, 0-- Return black if in an instance
+    end
+
     local map = C_Map.GetBestMapForUnit("player");
     local pos = C_Map.GetPlayerMapPosition(map,"player");
     local posX,posY = pos:GetXY()
@@ -732,6 +738,26 @@ function getCoordinateColor()
     return posX,posY,facing,1
 end
 
+
+function getPercentToF(valuePercent)
+   
+    if valuePercent<1.0/15.0 then return '0' end
+    if valuePercent<2.0/15.0 then return '1' end
+    if valuePercent<3.0/15.0 then return '2' end
+    if valuePercent<4.0/15.0 then return '3' end
+    if valuePercent<5.0/15.0 then return '4' end
+    if valuePercent<6.0/15.0 then return '5' end
+    if valuePercent<7.0/15.0 then return '6' end
+    if valuePercent<8.0/15.0 then return '7' end
+    if valuePercent<9.0/15.0 then return '8' end
+    if valuePercent<10.0/15.0 then return '9' end
+    if valuePercent<11.0/15.0 then return 'A' end
+    if valuePercent<12.0/15.0 then return 'B' end
+    if valuePercent<13.0/15.0 then return 'C' end
+    if valuePercent<14.0/15.0 then return 'D' end
+    if valuePercent<15.0/15.0 then return 'E' end
+    return 'F'
+end
 
 function FF_To_Decimal(value)
     
@@ -752,13 +778,20 @@ end
 function getPlayerAsColor(selection)
     local targetGUID = UnitGUID(selection)
  
+    if not selection then
+        return 1,1,1,1,1,1 -- Return black if no selection is provided
+    end
+
+    local targetGUID = UnitGUID(selection)
     if not targetGUID then
-        return 0, 0, 0, 0, 0, 0 -- Return black if no GUID is found
+        return 1,1,1,1,1,1  -- Return black if no GUID is found
     end
 
     if UnitIsPlayer(selection)==false then
-     
-        return 0, 0, 0, 0, 0, 0 -- Return black if not a player
+        if UnitIsDead(selection) then
+            return 1, 0, 0, 0, 0, 0 -- Return black if not a player
+        end
+        return 1, 0, 0, 1, 0, 0 -- Return black if not a player
     end
     -- Remove hyphens from the GUID
     targetGUID = string.lower(string.gsub(targetGUID, "-", ""))
@@ -890,7 +923,7 @@ local function createColorFrame(xOffset, yOffset, updateFunction)
         texture:SetColorTexture(r, g, b)
     end)
 
-    return frame
+    return texture
 end
 
 -- Position Color
@@ -919,22 +952,79 @@ end)
 
 -- Group life as f
 
-createColorFrame(0, -6 * cellSize, function()
-    -- Placeholder for future implementation
-    local r1, g1, b1 = 0, 0, 0
-    -- Add logic here to calculate r1, g1, b1
-    return r1, g1, b1
-end)
+
 
 -- Integer Action out
-createColorFrame(0, -7 * cellSize, function()
+int_texture2 = createColorFrame(0, -6 * cellSize, function()
+
+    local playerLifePercent01 = UnitHealth("player") / UnitHealthMax("player")
+    local partyLifePercent01 = UnitHealth("party1") / UnitHealthMax("party1")
+    local partyLifePercent02 = UnitHealth("party2") / UnitHealthMax("party2")
+    local partyLifePercent03 = UnitHealth("party3") / UnitHealthMax("party3")
+    local partyLifePercent04 = UnitHealth("party4") / UnitHealthMax("party4")
+    local petLifePercent01 = UnitHealth("pet") / UnitHealthMax("pet")
+    
+    local rFF = getPercentToF(playerLifePercent01)..getPercentToF(partyLifePercent01)
+    local gFF = getPercentToF(partyLifePercent02)..getPercentToF(partyLifePercent03)
+    local bFF = getPercentToF(partyLifePercent04)..getPercentToF(petLifePercent01)
+
+    local fffff = rFF..gFF..bFF
+    --print ("="..fffff)
     -- Placeholder for future implementation
-    local r1, g1, b1 = 0, 0, 0
+    local r1 = FF_To_Percent(rFF)
+    local g1 = FF_To_Percent(gFF)
+    local b1 = FF_To_Percent(bFF)
     -- Add logic here to calculate r1, g1, b1
+
+
     return r1, g1, b1
 end)
 
 
+function unsigned_integer_to_rgb_bytes(value)
+   
+    local r = bit.band(value, 0xFF) / 255.0
+    local g = bit.band(bit.rshift(value, 8), 0xFF) / 255.0
+    local b = bit.band(bit.rshift(value, 16), 0xFF) / 255.0
+
+    return r, g, b
+end
+
+int_texture1= createColorFrame(0, -7 * cellSize, function()
+    
+    local r, g, b = unsigned_integer_to_rgb_bytes(last_push_integer)
+    return r, g, b
+end)
+
+index_integer_texture=0
+last_push_integer=0
+function push_out_integer_as_color(value)
+    if value<0 then
+        value = -value
+    end
+
+    last_push_integer = value
+    local r, g, b = unsigned_integer_to_rgb_bytes(value)
+    index_integer_texture = index_integer_texture + 1
+    int_texture1:SetColorTexture(r, g, b)
+    
+end
+
+function push_out_random_integer_as_color()
+   
+    local int = math.random(0, 16777215) -- Random integer between 0 and 16777215 (0xFFFFFF)
+    push_out_integer_as_color(int)
+end
+
+
+-- Function to execute every 0.1 seconds
+function periodicCheck()
+    --push_out_random_integer_as_color()
+    push_out_integer_as_color(-2501)
+end
+
+-- Set up a timer to call the function every 0.1 seconds
+C_Timer.NewTicker(10, periodicCheck)
 
 local withdPercentTextCoord =0.6
 local heightPercentTextCoord =0.1
