@@ -733,6 +733,64 @@ function getCoordinateColor()
 end
 
 
+function FF_To_Decimal(value)
+    
+ -- turn ff hexa to 255 decimal
+    local decimalValue = tonumber(value, 16)
+    if decimalValue == nil then
+        return 0
+    end
+    return decimalValue
+
+end
+
+function FF_To_Percent(value)
+    local decimalValue = FF_To_Decimal(value)
+    return decimalValue / 255.0
+end
+
+function getPlayerAsColor(selection)
+    local targetGUID = UnitGUID(selection)
+ 
+    if not targetGUID then
+        return 0, 0, 0, 0, 0, 0 -- Return black if no GUID is found
+    end
+
+    if UnitIsPlayer(selection)==false then
+     
+        return 0, 0, 0, 0, 0, 0 -- Return black if not a player
+    end
+    -- Remove hyphens from the GUID
+    targetGUID = string.lower(string.gsub(targetGUID, "-", ""))
+    -- replace player by empty
+
+    targetGUID = string.gsub(targetGUID, "player", "")
+
+
+    
+
+    -- Extract the first 12 characters only (6 bytes -> two RGB colors)
+    local hex = string.sub(targetGUID, 1, 12)
+
+    
+    local c1r = FF_To_Percent(string.sub(hex, 1, 2))
+    local c1g = FF_To_Percent(string.sub(hex, 3, 4))
+    local c1b = FF_To_Percent(string.sub(hex, 5, 6))
+    local c2r = FF_To_Percent(string.sub(hex, 7, 8))
+    local c2g = FF_To_Percent(string.sub(hex, 9, 10))
+    local c2b = FF_To_Percent(string.sub(hex, 11, 12))
+
+    return c1r, c1g, c1b, c2r, c2g, c2b
+end
+
+function getPlayerAsColorFocus()
+    return getPlayerAsColor("target")
+end
+
+function getPlayerAsColorCurrent()
+    return getPlayerAsColor("player")
+end
+
 
 function getHealAndXp()
     
@@ -814,85 +872,66 @@ function getPlayerPosition()
     -- Return formatted string
     return string.format("X: %.2f, Y: %.2f\nX: %.2f Y: %.2f \nAngle: %.2f°",px, py, x, y, angle)
 end
+local cellHeightPercent = 0.125  -- 12.5% of screen height
+local cellSize = UIParent:GetHeight() * cellHeightPercent
+local halfCellSize = cellSize / 2.0
 
+local function createColorFrame(xOffset, yOffset, updateFunction)
+    local frame = CreateFrame("Frame", nil, UIParent)
+    frame:SetSize(10, cellSize)
+    frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", xOffset, yOffset)
 
-local positionColorXOffset = 0
-local positionColorYOffset = -0
-local positionColorSize = 10
-local positionColorHeight= 200
-local positionColor = CreateFrame("Frame", nil, UIParent)
-positionColor:SetSize(positionColorSize, positionColorHeight)
-positionColor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
+    local texture = frame:CreateTexture(nil, "BACKGROUND")
+    texture:SetAllPoints()
+    texture:SetColorTexture(1, 1, 1)  -- Initial color
 
-local texture = positionColor:CreateTexture(nil, "BACKGROUND")
-texture:SetAllPoints()
-texture:SetColorTexture(1, 1, 1)  -- Initial color
+    frame:SetScript("OnUpdate", function(self, elapsed)
+        local r, g, b = updateFunction()
+        texture:SetColorTexture(r, g, b)
+    end)
 
--- Update position color every frame
-positionColor:SetScript("OnUpdate", function(self, elapsed)
-    local r, g, b = getCoordinateColor()
-    texture:SetColorTexture(r, g, b)
+    return frame
+end
+
+-- Position Color
+createColorFrame(0, 0, getCoordinateColor)
+
+-- World Position X
+createColorFrame(0, -cellSize, function() return getWorldPosition(true) end)
+
+-- World Position Y
+createColorFrame(0, -2 * cellSize, function() return getWorldPosition(false) end)
+
+-- Heal and XP
+createColorFrame(0, -3 * cellSize, getHealAndXp)
+
+-- Player ID Part One
+createColorFrame(0, -4 * cellSize, function()
+    local r1, g1, b1 = getPlayerAsColorFocus()
+    return r1, g1, b1
 end)
 
-local positionColorXOffset = 0
-local positionColorYOffset = -200
-local positionColorSize = 10
-local positionColorHeight= 200
-local positionColorX = CreateFrame("Frame", nil, UIParent)
-positionColorX:SetSize(positionColorSize, positionColorHeight)
-positionColorX:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
-
-local texture = positionColorX:CreateTexture(nil, "BACKGROUND")
-texture:SetAllPoints()
-texture:SetColorTexture(1, 1, 1)  -- Initial color
-
--- Update position color every frame
-positionColorX:SetScript("OnUpdate", function(self, elapsed)
-    local r, g, b = getWorldPosition(true)
-    texture:SetColorTexture(r, g, b)
+-- Player ID Part Two
+createColorFrame(0, -5 * cellSize, function()
+    local _, _, _, r2, g2, b2 = getPlayerAsColorFocus()
+    return r2, g2, b2
 end)
 
+-- Group life as f
 
-local positionColorXOffset = 0
-local positionColorYOffset = -400
-local positionColorSize = 10
-local positionColorHeight= 200
-local positionColorY = CreateFrame("Frame", nil, UIParent)
-positionColorY:SetSize(positionColorSize, positionColorHeight)
-positionColorY:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", positionColorXOffset, positionColorYOffset)
-
-local texture = positionColorY:CreateTexture(nil, "BACKGROUND")
-texture:SetAllPoints()
-texture:SetColorTexture(1, 1, 1)  -- Initial color
-
--- Update position color every frame
-positionColorY:SetScript("OnUpdate", function(self, elapsed)
-    local r, g, b = getWorldPosition(false)
-    texture:SetColorTexture(r, g, b)
+createColorFrame(0, -6 * cellSize, function()
+    -- Placeholder for future implementation
+    local r1, g1, b1 = 0, 0, 0
+    -- Add logic here to calculate r1, g1, b1
+    return r1, g1, b1
 end)
 
-
-
-
-local healXpColorXOffset = 0
-local healXpColorYOffset = -600
-local healXpColorSize = 10
-local healXpColorHeight= 200
-
--- Create the frame
-local healXp = CreateFrame("Frame", nil, UIParent)
-healXp:SetSize(healXpColorSize, healXpColorHeight)
-healXp:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", healXpColorXOffset, healXpColorYOffset)
-
--- Create the texture
-local texture = healXp:CreateTexture(nil, "BACKGROUND")
-texture:SetAllPoints()
-texture:SetColorTexture(1, 1, 1)  -- Initial color (white)
-
--- Update position and color every frame
-healXp:SetScript("OnUpdate", function(self, elapsed)
-    local r, g, b = getHealAndXp()  -- Get the color values from the function
-    texture:SetColorTexture(r, g, b) -- Update the texture color
+-- Integer Action out
+createColorFrame(0, -7 * cellSize, function()
+    -- Placeholder for future implementation
+    local r1, g1, b1 = 0, 0, 0
+    -- Add logic here to calculate r1, g1, b1
+    return r1, g1, b1
 end)
 
 
