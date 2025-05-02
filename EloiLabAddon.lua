@@ -775,52 +775,55 @@ function FF_To_Percent(value)
     return decimalValue / 255.0
 end
 
--- /reload
-function getPlayerAsColor(selection)
-    local targetGUID = UnitGUID(selection)
- 
-    if not selection then
-        
-        select= "player"
-    end
 
+
+function getPlayerAsColor(selection)
     local targetGUID = UnitGUID(selection)
     
     if not targetGUID then
-        targetGUID = UnitGUID("player")
+        return 1, 1, 1, 1, 1, 1 -- white
+    else
+        local string_ffffffffffff = "000000000000"
+        if not UnitIsPlayer(selection) then
+            if targetGUID and targetGUID:find("Creature") then
+                string_ffffffffffff = "FF0000000000"
+                local unitType, zero, serverId, instanceId, zoneUid, npcId, spawnUid = strsplit("-", targetGUID)
 
-    else 
+                -- convert npcid in decimal to hexadecimal
+                local idAsDecimal = tonumber(npcId, 10) or 0
+                local hex = string.format("%x", idAsDecimal)
 
-        if UnitIsPlayer(selection)==false then
-            if UnitIsDead(selection) then
-                return 1, 0, 0, 0, 0, 0 
+                -- copy from right to left characters to fill the string_ffffffffffff
+                local hexLength = string.len(hex)
+                local startIndex = 12 - hexLength
+                string_ffffffffffff = string.sub(string_ffffffffffff, 1, startIndex) .. hex .. string.sub(string_ffffffffffff, startIndex + hexLength + 1)
+                --print("GUID: " .. targetGUID .. " Hex: " .. string_ffffffffffff)
             end
-            return 1, 0, 0, 1, 0, 0
+            if targetGUID and targetGUID:find("Vehicle") then
+                string_ffffffffffff = "FD0000000000"
+            end
+            if targetGUID and targetGUID:find("Pet") then
+                string_ffffffffffff = "FE0000000000"
+            end
+        else
+            string_ffffffffffff = string.lower(string.gsub(string.gsub(targetGUID, "-", ""), "Player", ""))
         end
+        local hex = string.sub(string_ffffffffffff, 1, 12)
+        local c1r = FF_To_Percent(string.sub(hex, 1, 2))
+        local c1g = FF_To_Percent(string.sub(hex, 3, 4))
+        local c1b = FF_To_Percent(string.sub(hex, 5, 6))
+        local c2r = FF_To_Percent(string.sub(hex, 7, 8))
+        local c2g = FF_To_Percent(string.sub(hex, 9, 10))
+        local c2b = FF_To_Percent(string.sub(hex, 11, 12))
+
+        return c1r, c1g, c1b, c2r, c2g, c2b
     end
 
-    -- Remove hyphens from the GUID
-    targetGUID = string.lower(string.gsub(targetGUID, "-", ""))
-    -- replace player by empty
-
-    targetGUID = string.gsub(targetGUID, "player", "")
-
-
-    
-
-    -- Extract the first 12 characters only (6 bytes -> two RGB colors)
-    local hex = string.sub(targetGUID, 1, 12)
-
-    
-    local c1r = FF_To_Percent(string.sub(hex, 1, 2))
-    local c1g = FF_To_Percent(string.sub(hex, 3, 4))
-    local c1b = FF_To_Percent(string.sub(hex, 5, 6))
-    local c2r = FF_To_Percent(string.sub(hex, 7, 8))
-    local c2g = FF_To_Percent(string.sub(hex, 9, 10))
-    local c2b = FF_To_Percent(string.sub(hex, 11, 12))
-
-    return c1r, c1g, c1b, c2r, c2g, c2b
+    return 1, 1, 1, 1, 1, 1 -- white
 end
+
+
+
 
 function getPlayerAsColorFocus()
     return getPlayerAsColor("target")
@@ -964,13 +967,13 @@ createColorFrame(0, -2 * cellSize, function() return getWorldPosition(false) end
 createColorFrame(0, -3 * cellSize, getHealAndXp)
 
 -- Player ID Part One
-createColorFrame(0, -4 * cellSize, function()
+createColorFrame(0, -6 * cellSize, function()
     local r1, g1, b1 =  getPlayerAsColor("player")
     return r1, g1, b1
 end)
 
 -- Player ID Part Two
-createColorFrame(0, -5 * cellSize, function()
+createColorFrame(0, -7 * cellSize, function()
     local _, _, _, r2, g2, b2 = getPlayerAsColor("player")
     return r2, g2, b2
 end)
@@ -986,7 +989,7 @@ end)
 
 
 -- Integer Action out
-int_texture2 = createColorFrame(0, -6 * cellSize, function()
+int_texture2 = createColorFrame(0, -4 * cellSize, function()
 
     local playerLifePercent01 = UnitHealth("player") / UnitHealthMax("player")
     local partyLifePercent01 = UnitHealth("party1") / UnitHealthMax("party1")
@@ -1032,7 +1035,7 @@ function unsigned_integer_to_rgb_bytes(value)
     return r, g, b
 end
 
-int_texture1= createColorFrame(0, -7 * cellSize, function()
+int_texture1= createColorFrame(0, -5 * cellSize, function()
     
     local r, g, b = unsigned_integer_to_rgb_bytes(last_push_integer)
     return r, g, b
@@ -1061,63 +1064,38 @@ end)
 
 
 createColorFrameLeft(0, -0 * cellSize, function()
-    return 1,1,1
+    return 0,1,0
 end) 
 createColorFrameLeft(0, -1 * cellSize, function()
-    return 1,1,0
+    return 0,1,0
 end)
  createColorFrameLeft(0, -2 * cellSize, function()
-    return 1,0,1
+    return 0,1,0
 end)
  createColorFrameLeft(0, -3 * cellSize, function()
-    return 1,0,0
+    return 0,1,0
 end)
  createColorFrameLeft(0, -4 * cellSize, function()
-    return 0,1,1
-end)
- createColorFrameLeft(0, -5 * cellSize, function()
     return 0,1,0
 end)
 
 
 createColorFrameLeft(0, -6 * cellSize, function()
-    local guid = UnitGUID("target")
-    if guid and guid:find("Creature") then
-        local unitType, zero, serverId, instanceId, zoneUid, npcId, spawnUid = strsplit("-", guid)
-        local idAsDecimal = tonumber(npcId, 10) or 0
-        -- Convert idAsDecimal to three 255 bytes little endian unsigned
-        local r = bit.band(idAsDecimal, 0xFF) / 255.0
-        local g = bit.band(bit.rshift(idAsDecimal, 8), 0xFF) / 255.0
-        local b = bit.band(bit.rshift(idAsDecimal, 16), 0xFF) / 255.0
-        print("ID " .. idAsDecimal .. " " .. r .. " " .. g .. " " .. b)
-
-        return r, g, b
-    end
-
-    return 1, 1, 1
+    local r, g, b, _, _, _ = getPlayerAsColorFocus()
+    return r, g, b
 end)
--- Creature	Unit type (Player, Creature, Vehicle)
--- 0	Usually always 0
--- 3135	Server ID
--- 2522	Instance ID
--- 13745	Zone Unique ID
--- 18533	NPC ID (Very important!)
--- 000064EF42	Spawn UID (unique to that instance)
-
--- You can split this in Lua like so:
-
--- lua
--- Copy
--- Edit
--- local guid = UnitGUID("target")
--- if guid then
---     local unitType, zero, serverId, instanceId, zoneUid, npcId, spawnUid = strsplit("-", guid)
---     print("Unit type:", unitType)
---     print("NPC ID:", npcId)
-
-
 
 createColorFrameLeft(0, -7 * cellSize, function()
+    local _, _, _, r, g, b = getPlayerAsColorFocus()
+    return r, g, b
+end)
+
+
+
+
+
+
+createColorFrameLeft(0, -5 * cellSize, function()
     local targetLifePercent01 = UnitHealth("target") / UnitHealthMax("target")
     local targetLevel = UnitLevel("target") 
     local targetPower = UnitPower("target") / UnitPowerMax("target")
