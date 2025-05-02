@@ -1,6 +1,12 @@
+If you want to have a barcode in your game to report bot in video.
+I am going to do an addon with only that in a near future without my lab around.
 
-Font:
-https://www.barcodesinc.com/free-barcode-font/?srsltid=AfmBOooZFbRyx-zB0XoD9dr5mElMiwp8A_x97C_10Z9xzgxvpkQu821l
+![image](https://github.com/user-attachments/assets/76bd93a7-d449-47bc-a224-4228af36949c)
+
+Font: https://www.barcodesinc.com/free-barcode-font/?srsltid=AfmBOooZFbRyx-zB0XoD9dr5mElMiwp8A_x97C_10Z9xzgxvpkQu821l
+[![image](https://github.com/user-attachments/assets/abb6c6bd-de79-41d8-8415-73f315b0b9f9)](https://www.barcodesinc.com/free-barcode-font/?srsltid=AfmBOooZFbRyx-zB0XoD9dr5mElMiwp8A_x97C_10Z9xzgxvpkQu821l)
+
+
 ``` lua
 
 
