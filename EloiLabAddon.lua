@@ -775,24 +775,30 @@ function FF_To_Percent(value)
     return decimalValue / 255.0
 end
 
+-- /reload
 function getPlayerAsColor(selection)
     local targetGUID = UnitGUID(selection)
  
     if not selection then
-        return 1,1,1,1,1,1 -- Return black if no selection is provided
+        
+        select= "player"
     end
 
     local targetGUID = UnitGUID(selection)
+    
     if not targetGUID then
-        return 1,1,1,1,1,1  -- Return black if no GUID is found
+        targetGUID = UnitGUID("player")
+
+    else 
+
+        if UnitIsPlayer(selection)==false then
+            if UnitIsDead(selection) then
+                return 1, 0, 0, 0, 0, 0 
+            end
+            return 1, 0, 0, 1, 0, 0
+        end
     end
 
-    if UnitIsPlayer(selection)==false then
-        if UnitIsDead(selection) then
-            return 1, 0, 0, 0, 0, 0 -- Return black if not a player
-        end
-        return 1, 0, 0, 1, 0, 0 -- Return black if not a player
-    end
     -- Remove hyphens from the GUID
     targetGUID = string.lower(string.gsub(targetGUID, "-", ""))
     -- replace player by empty
@@ -909,9 +915,10 @@ local cellHeightPercent = 0.125  -- 12.5% of screen height
 local cellSize = UIParent:GetHeight() * cellHeightPercent
 local halfCellSize = cellSize / 2.0
 
+-- /reload
 local function createColorFrame(xOffset, yOffset, updateFunction)
     local frame = CreateFrame("Frame", nil, UIParent)
-    frame:SetSize(10, cellSize)
+    frame:SetSize(25, cellSize)
     frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", xOffset, yOffset)
 
     local texture = frame:CreateTexture(nil, "BACKGROUND")
