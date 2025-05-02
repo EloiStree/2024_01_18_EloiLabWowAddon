@@ -7,6 +7,8 @@
 ## DefaultState: enabled
 ## SavedVariables: MEMO_WINDOWOPEN, MEMO_METAINFOTEXT, MEMO_PLAYERNOTE,MEMO_TAGMODE,MEMO_DEBUGAUTORUNTAG, MEMO_CLIPBOARD
 
+## Fonts/BarcodeFont.ttf
+
 EloiLabAddon.lua
 EloiLabMemoryShareUtility.lua
 CustomYourCodeHere.lua
