@@ -933,6 +933,24 @@ local function createColorFrame(xOffset, yOffset, updateFunction)
     return texture
 end
 
+
+local function createColorFrameLeft(xOffset, yOffset, updateFunction)
+    local frame = CreateFrame("Frame", nil, UIParent)
+    frame:SetSize(30, cellSize)
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", xOffset, yOffset)
+
+    local texture = frame:CreateTexture(nil, "BACKGROUND")
+    texture:SetAllPoints()
+    texture:SetColorTexture(1, 1, 1)  -- Initial color
+
+    frame:SetScript("OnUpdate", function(self, elapsed)
+        local r, g, b = updateFunction()
+        texture:SetColorTexture(r, g, b)
+    end)
+
+    return texture
+end
+
 -- Position Color
 createColorFrame(0, 0, getCoordinateColor)
 
@@ -947,17 +965,23 @@ createColorFrame(0, -3 * cellSize, getHealAndXp)
 
 -- Player ID Part One
 createColorFrame(0, -4 * cellSize, function()
-    local r1, g1, b1 = getPlayerAsColorFocus()
+    local r1, g1, b1 =  getPlayerAsColor("player")
     return r1, g1, b1
 end)
 
 -- Player ID Part Two
 createColorFrame(0, -5 * cellSize, function()
-    local _, _, _, r2, g2, b2 = getPlayerAsColorFocus()
+    local _, _, _, r2, g2, b2 = getPlayerAsColor("player")
     return r2, g2, b2
 end)
 
 -- Group life as f
+
+
+
+
+
+
 
 
 
@@ -988,6 +1012,17 @@ int_texture2 = createColorFrame(0, -6 * cellSize, function()
 end)
 
 
+
+
+
+
+
+
+
+
+
+
+
 function unsigned_integer_to_rgb_bytes(value)
    
     local r = bit.band(value, 0xFF) / 255.0
@@ -1002,6 +1037,100 @@ int_texture1= createColorFrame(0, -7 * cellSize, function()
     local r, g, b = unsigned_integer_to_rgb_bytes(last_push_integer)
     return r, g, b
 end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+createColorFrameLeft(0, -0 * cellSize, function()
+    return 1,1,1
+end) 
+createColorFrameLeft(0, -1 * cellSize, function()
+    return 1,1,0
+end)
+ createColorFrameLeft(0, -2 * cellSize, function()
+    return 1,0,1
+end)
+ createColorFrameLeft(0, -3 * cellSize, function()
+    return 1,0,0
+end)
+ createColorFrameLeft(0, -4 * cellSize, function()
+    return 0,1,1
+end)
+ createColorFrameLeft(0, -5 * cellSize, function()
+    return 0,1,0
+end)
+
+
+createColorFrameLeft(0, -6 * cellSize, function()
+    local guid = UnitGUID("target")
+    if guid and guid:find("Creature") then
+        local unitType, zero, serverId, instanceId, zoneUid, npcId, spawnUid = strsplit("-", guid)
+        local idAsDecimal = tonumber(npcId, 10) or 0
+        -- Convert idAsDecimal to three 255 bytes little endian unsigned
+        local r = bit.band(idAsDecimal, 0xFF) / 255.0
+        local g = bit.band(bit.rshift(idAsDecimal, 8), 0xFF) / 255.0
+        local b = bit.band(bit.rshift(idAsDecimal, 16), 0xFF) / 255.0
+        print("ID " .. idAsDecimal .. " " .. r .. " " .. g .. " " .. b)
+
+        return r, g, b
+    end
+
+    return 1, 1, 1
+end)
+-- Creature	Unit type (Player, Creature, Vehicle)
+-- 0	Usually always 0
+-- 3135	Server ID
+-- 2522	Instance ID
+-- 13745	Zone Unique ID
+-- 18533	NPC ID (Very important!)
+-- 000064EF42	Spawn UID (unique to that instance)
+
+-- You can split this in Lua like so:
+
+-- lua
+-- Copy
+-- Edit
+-- local guid = UnitGUID("target")
+-- if guid then
+--     local unitType, zero, serverId, instanceId, zoneUid, npcId, spawnUid = strsplit("-", guid)
+--     print("Unit type:", unitType)
+--     print("NPC ID:", npcId)
+
+
+
+createColorFrameLeft(0, -7 * cellSize, function()
+    local targetLifePercent01 = UnitHealth("target") / UnitHealthMax("target")
+    local targetLevel = UnitLevel("target") 
+    local targetPower = UnitPower("target") / UnitPowerMax("target")
+    local targetLoadingPower = (UnitCastingInfo("target") or UnitChannelInfo("target")) and 0.9 or 0
+    local bFF = getPercentToF(targetPower)..getPercentToF(targetLoadingPower)
+    local r1 = targetLifePercent01
+    local g1 = targetLevel
+    local b1 = FF_To_Percent(bFF)
+    return r1, g1, b1
+end)
+
+
+
 
 index_integer_texture=0
 last_push_integer=0
@@ -1724,12 +1853,16 @@ C_Timer.NewTicker(0.5, function()
     end
     local playerId = UnitGUID("player")
     local targetGUID = UnitGUID("mouseover") or UnitGUID("target")
-    if targetGUID and playerId ~= targetGUID and UnitIsPlayer("mouseover") then
+    local isPlayer = UnitIsPlayer("mouseover") or UnitIsPlayer("target")
+
+    
+
+    if targetGUID and playerId ~= targetGUID and isPlayer then
         local encodedText = encodeToBarcodeTFB(targetGUID:gsub("Player%-", ""))
 
-        textString:SetText("Code 39: " .. targetGUID) -- Set the encoded text as the frame's text
+        textString:SetText("Code 39: " .. targetGUID) 
 
-        frameCode.text:SetText(encodedText) -- Set the encoded text as the frame's text
+        frameCode.text:SetText(encodedText) 
         frameCode:Show()
     else
         frameCode:Hide()
