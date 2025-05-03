@@ -639,86 +639,90 @@ end
 
 
 
+local bool_usePixelUpdate = false
 
------------------- COLORSTART
-local screenHeight = GetScreenHeight()
-local screenWidth = GetScreenWidth()
-print("Screen Height: " .. screenHeight)
-print("Screen Width: " .. screenWidth)
+if bool_usePixelUpdate then
 
--- Create the main frame
-local mainFrame = CreateFrame("Frame", nil, UIParent)
-mainFrame:SetSize(800, 4)  -- Adjust height to 4 for 4 lines
-mainFrame:SetPoint("TOPLEFT")  
-mainFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+        ------------------ COLORSTART
+        local screenHeight = GetScreenHeight()
+        local screenWidth = GetScreenWidth()
+        print("Screen Height: " .. screenHeight)
+        print("Screen Width: " .. screenWidth)
 
--- Create 800 individual 1px wide textures for each of the 4 lines
-local blockTextWidth = 4
-local blockTextHeight = 600
-local blockTotaleSize = blockTextWidth * blockTextHeight
-local scalePerPixelWidth = screenWidth/800
-local scalePerPixelHeight = screenHeight/600
-print ("Scale per pixel width: "..scalePerPixelWidth)
-print ("Scale per pixel height: "..scalePerPixelHeight)
-local textures = {}
-for line = 0, blockTextHeight-1 do  -- Loop for 4 lines
-    for column = 0, blockTextWidth-1 do
-        local texture = mainFrame:CreateTexture()
-        texture:SetSize(scalePerPixelWidth, scalePerPixelHeight)  -- Scale size for each texture
-        texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT",
-         (column ) * scalePerPixelWidth,
-         -(line) * scalePerPixelHeight) 
+        -- Create the main frame
+        local mainFrame = CreateFrame("Frame", nil, UIParent)
+        mainFrame:SetSize(800, 4)  -- Adjust height to 4 for 4 lines
+        mainFrame:SetPoint("TOPLEFT")  
+        mainFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 
-        if line == 1 then
-            texture:SetColorTexture(1, 0, 1)  -- Set texture color (Red for demonstration)
-        elseif line == 2 then
-            texture:SetColorTexture(0, 1, 0)  -- Set texture color (Green for demonstration)
-        elseif line == 3 then
-            texture:SetColorTexture(0, 0, 1)  -- Set texture color (Blue for demonstration)
-        else
-            texture:SetColorTexture(1, 1, 1)  -- Set texture color (White for demonstration)
-        end
-        table.insert(textures, texture)  -- Store the texture in a table
-    end
-end
+        -- Create 800 individual 1px wide textures for each of the 4 lines
+        local blockTextWidth = 4
+        local blockTextHeight = 600
+        local blockTotaleSize = blockTextWidth * blockTextHeight
+        local scalePerPixelWidth = screenWidth/800
+        local scalePerPixelHeight = screenHeight/600
+        print ("Scale per pixel width: "..scalePerPixelWidth)
+        print ("Scale per pixel height: "..scalePerPixelHeight)
+        local textures = {}
+        for line = 0, blockTextHeight-1 do  -- Loop for 4 lines
+            for column = 0, blockTextWidth-1 do
+                local texture = mainFrame:CreateTexture()
+                texture:SetSize(scalePerPixelWidth, scalePerPixelHeight)  -- Scale size for each texture
+                texture:SetPoint("TOPLEFT", mainFrame, "TOPLEFT",
+                (column ) * scalePerPixelWidth,
+                -(line) * scalePerPixelHeight) 
 
--- Define a variable for time or animation effect
-local timeElapsed = 0
-
--- Update function that runs every frame
-mainFrame:SetScript("OnUpdate", function(self, elapsed)
-    local textToDisplayAsColor ="  "..(StaticMetaInfo and StaticMetaInfo.text or "No text")  -- Get the text to display as color
-    --textToDisplayAsColor = "Bonjour, j'aime les frites."  -- Get the text to display as color
-    timeElapsed = timeElapsed + elapsed  -- Increment the time elapsed since the last frame
-
-    -- local maxTextSize =blockTotaleSize-1*3
-    -- if #textToDisplayAsColor > maxTextSize then
-    --     textToDisplayAsColor = string.sub(textToDisplayAsColor, 1, maxTextSize)  -- Limit the text to 800 characters
-    -- end
-
-
-    --print("Count ".. #textToDisplayAsColor)
-    if timeElapsed > 0.1 then 
-        local textLength = #textToDisplayAsColor  -- Get the length of the text in UTF-8 characters using WoW API
-        --print("Text and array size "..textLength.." "..arraySize)
-        for i=1, blockTotaleSize do
-            local indexInArray = i
-            local indexInText = indexInArray*3
-            if (indexInText + 2) < textLength then
-                local r = string.byte(textToDisplayAsColor, indexInText) / 255
-                local g = string.byte(textToDisplayAsColor, indexInText + 1) / 255
-                local b = string.byte(textToDisplayAsColor, indexInText + 2) / 255
-                
-               
-                textures[indexInArray]:SetColorTexture(r, g, b)  -- Update the texture's color
-            else    
-                textures[indexInArray]:SetColorTexture(1, 0, 1)  -- Set texture color (White for demonstration)
+                if line == 1 then
+                    texture:SetColorTexture(1, 0, 1)  -- Set texture color (Red for demonstration)
+                elseif line == 2 then
+                    texture:SetColorTexture(0, 1, 0)  -- Set texture color (Green for demonstration)
+                elseif line == 3 then
+                    texture:SetColorTexture(0, 0, 1)  -- Set texture color (Blue for demonstration)
+                else
+                    texture:SetColorTexture(1, 1, 1)  -- Set texture color (White for demonstration)
+                end
+                table.insert(textures, texture)  -- Store the texture in a table
             end
         end
-        timeElapsed = 0  -- Reset the time
-    end
-end)
 
+        -- Define a variable for time or animation effect
+        local timeElapsed = 0
+
+        -- Update function that runs every frame
+        mainFrame:SetScript("OnUpdate", function(self, elapsed)
+            local textToDisplayAsColor ="  "..(StaticMetaInfo and StaticMetaInfo.text or "No text")  -- Get the text to display as color
+            --textToDisplayAsColor = "Bonjour, j'aime les frites."  -- Get the text to display as color
+            timeElapsed = timeElapsed + elapsed  -- Increment the time elapsed since the last frame
+
+            -- local maxTextSize =blockTotaleSize-1*3
+            -- if #textToDisplayAsColor > maxTextSize then
+            --     textToDisplayAsColor = string.sub(textToDisplayAsColor, 1, maxTextSize)  -- Limit the text to 800 characters
+            -- end
+
+
+            --print("Count ".. #textToDisplayAsColor)
+            if timeElapsed > 0.1 then 
+                local textLength = #textToDisplayAsColor  -- Get the length of the text in UTF-8 characters using WoW API
+                --print("Text and array size "..textLength.." "..arraySize)
+                for i=1, blockTotaleSize do
+                    local indexInArray = i
+                    local indexInText = indexInArray*3
+                    if (indexInText + 2) < textLength then
+                        local r = string.byte(textToDisplayAsColor, indexInText) / 255
+                        local g = string.byte(textToDisplayAsColor, indexInText + 1) / 255
+                        local b = string.byte(textToDisplayAsColor, indexInText + 2) / 255
+                        
+                    
+                        textures[indexInArray]:SetColorTexture(r, g, b)  -- Update the texture's color
+                    else    
+                        textures[indexInArray]:SetColorTexture(1, 0, 1)  -- Set texture color (White for demonstration)
+                    end
+                end
+                timeElapsed = 0  -- Reset the time
+            end
+        end)
+
+end
 
 function getCoordinateColor()
     
@@ -836,12 +840,14 @@ end
 
 function getHealAndXp()
     
-    local xp = UnitXP("player")
-    local playerLevel = UnitLevel("player")    
-    local percentXp = xp / UnitXPMax("player")
     local percentHealth = UnitHealth("player") / UnitHealthMax("player")
+
+    local playerLevel = UnitLevel("player")/255.0 or 0 
+
+    local xp = UnitXP("player")
+    local percentXp = xp / UnitXPMax("player")
     
-    return playerLevel/255 , percentHealth , percentXp, 1
+    return percentHealth, playerLevel   , percentXp
 end
 
 function getWorldPosition(trueXFalseY)
@@ -923,6 +929,8 @@ local function createColorFrame(xOffset, yOffset, updateFunction)
     local frame = CreateFrame("Frame", nil, UIParent)
     frame:SetSize(25, cellSize)
     frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", xOffset, yOffset)
+    frame:SetFrameStrata("TOOLTIP") -- Set the frame strata to "TOOLTIP" to display it over all interface
+    frame:SetFrameLevel(GameTooltip:GetFrameLevel() + 10)
 
     local texture = frame:CreateTexture(nil, "BACKGROUND")
     texture:SetAllPoints()
@@ -939,8 +947,10 @@ end
 
 local function createColorFrameLeft(xOffset, yOffset, updateFunction)
     local frame = CreateFrame("Frame", nil, UIParent)
-    frame:SetSize(30, cellSize)
+    frame:SetSize(25, cellSize)
     frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", xOffset, yOffset)
+    frame:SetFrameStrata("TOOLTIP") -- Set the frame strata to "TOOLTIP" to display it over all interface
+    frame:SetFrameLevel(GameTooltip:GetFrameLevel() + 10)
 
     local texture = frame:CreateTexture(nil, "BACKGROUND")
     texture:SetAllPoints()
@@ -1097,13 +1107,13 @@ end)
 
 createColorFrameLeft(0, -5 * cellSize, function()
     local targetLifePercent01 = UnitHealth("target") / UnitHealthMax("target")
-    local targetLevel = UnitLevel("target") 
+    local targetLevel = UnitLevel("target") /255.0
     local targetPower = UnitPower("target") / UnitPowerMax("target")
-    local targetLoadingPower = (UnitCastingInfo("target") or UnitChannelInfo("target")) and 0.9 or 0
-    local bFF = getPercentToF(targetPower)..getPercentToF(targetLoadingPower)
+    -- local targetLoadingPower = (UnitCastingInfo("target") or UnitChannelInfo("target")) and 9 or 0
+    -- local bFF = getPercentToF(targetPower)..getPercentToF(targetLoadingPower)
     local r1 = targetLifePercent01
-    local g1 = targetLevel
-    local b1 = FF_To_Percent(bFF)
+    local g1 =  targetLevel
+    local b1 = targetPower
     return r1, g1, b1
 end)
 
@@ -1211,10 +1221,16 @@ positionFrame:Show()
 --     end
 -- end
 
--- Create an updater frame
-local updater = CreateFrame("Frame")
-updater:SetFrameStrata("TOOLTIP")  -- Highest priority for updater too
-updater:SetScript("OnUpdate", UpdatePixels)  -- Runs UpdatePixels every frame
+
+
+
+
+    -- Create an updater frame
+    local updater = CreateFrame("Frame")
+    updater:SetFrameStrata("TOOLTIP")  -- Highest priority for updater too
+
+
+    updater:SetScript("OnUpdate", UpdatePixels)  -- Runs UpdatePixels every frame
 
 ------------------- COLOREND
 
@@ -1785,7 +1801,7 @@ local fontPath = "Interface\\AddOns\\EloiLab\\Fonts\\free3of9.ttf"
 -- Create the frame
 local frameCode = CreateFrame("Frame", "BarcodeFrame", UIParent)
 frameCode:SetSize(300, 60) -- 30% of screen width
-frameCode:SetPoint("TOPLEFT", 10, -10) -- Position at top-left corner with 10px offset
+frameCode:SetPoint("TOPLEFT", 30, -5) -- Position at top-left corner with 10px offset
 frameCode:Show()
 
 -- Background (optional)
