@@ -1793,7 +1793,8 @@ localDico.whisper = string.format("/w %s-%s",localDico.mname,localDico.mrealm)
 
 end
 
-
+  
+--
 
 --------------------------------------------------------------------------[[
 local fontPath = "Interface\\AddOns\\EloiLab\\Fonts\\free3of9.ttf"
