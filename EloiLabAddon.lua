@@ -1155,7 +1155,7 @@ local heightPercentTextCoord =0.1
 
 -- Create a frame to display player position
 local positionFrame = CreateFrame("Frame", "PositionFrame", UIParent)
-positionFrame:SetSize(UIParent:GetWidth() * withdPercentTextCoord, UIParent:GetHeight() * heightPercentTextCoord)
+positionFrame:SetSize(GetScreenWidth() * withdPercentTextCoord, UIParent:GetHeight() * heightPercentTextCoord)
 positionFrame:SetPoint("TOP", 0, -10)
 
 
@@ -1166,7 +1166,7 @@ positionFrame.editBox = CreateFrame("EditBox", nil, positionFrame)
 positionFrame.editBox:SetAllPoints(true)
 positionFrame.editBox:SetMultiLine(true)
 positionFrame.editBox:SetAutoFocus(false)
-positionFrame.editBox:SetFont("Fonts\\FRIZQT__.TTF", 22, "OUTLINE")
+positionFrame.editBox:SetFont("Fonts\\FRIZQT__.TTF", 36, "OUTLINE")
 positionFrame.editBox:SetJustifyH("CENTER")
 positionFrame.editBox:EnableMouse(fales)  -- Enable mouse for the EditBox
 positionFrame.editBox:SetScript("OnEscapePressed", function() positionFrame:Hide() end)
