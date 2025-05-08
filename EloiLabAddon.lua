@@ -1043,14 +1043,19 @@ function unsigned_integer_to_rgb_bytes(value)
     local r = bit.band(value, 0xFF) / 255.0
     local g = bit.band(bit.rshift(value, 8), 0xFF) / 255.0
     local b = bit.band(bit.rshift(value, 16), 0xFF) / 255.0
-
+--local r, g, b = unsigned_integer_to_rgb_bytes(last_push_integer)
     return r, g, b
 end
 
-int_texture1= createColorFrame(0, -5 * cellSize, function()
-    
-    local r, g, b = unsigned_integer_to_rgb_bytes(last_push_integer)
-    return r, g, b
+int_texture1 = createColorFrame(0, -5 * cellSize, function()
+    local int_xp = UnitXP("player")
+    local int_999999 = int_xp % 1000000
+    local r_999999 = math.floor(int_999999 / 10000) % 256
+    local g_999999 = math.floor(int_999999 / 100) % 256
+    local b_999999 = int_999999 % 256
+    -- print("XP: " .. int_xp)
+    --print("r: " .. r_999999 .. " g: " .. g_999999 .. " b: " .. b_999999)
+    return r_999999 / 255.0, g_999999 / 255.0, b_999999 / 255.0
 end)
 
 
