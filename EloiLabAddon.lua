@@ -1050,12 +1050,12 @@ end
 int_texture1 = createColorFrame(0, -5 * cellSize, function()
     local int_xp = UnitXP("player")
     local int_999999 = int_xp % 1000000
-    local r_999999 = math.floor(int_999999 / 10000) % 256
-    local g_999999 = math.floor(int_999999 / 100) % 256
-    local b_999999 = int_999999 % 256
+    local r_99 = math.floor(int_999999 / 10000) % 100
+    local g_99 = math.floor(int_999999 / 100) % 100
+    local b_99 = int_999999 % 100
     -- print("XP: " .. int_xp)
     --print("r: " .. r_999999 .. " g: " .. g_999999 .. " b: " .. b_999999)
-    return r_999999 / 255.0, g_999999 / 255.0, b_999999 / 255.0
+    return r_99 / 255.0, g_99 / 255.0, b_99 / 255.0
 end)
 
 
