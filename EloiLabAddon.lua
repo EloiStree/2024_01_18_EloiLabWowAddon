@@ -916,10 +916,10 @@ function getPlayerPosition()
 
     local player_guid = UnitGUID("player")
     local split = { strsplit("-", player_guid or "") }
-    local player_id = split[3] or " "
+    local player_id = (split[2] or " ").."-"..(split[3] or " ")
 
     -- Return formatted string
-    return string.format("X: %.2f, Y: %.2f\nWorld X: %.2f, World Y: %.2f\nAngle: %.2f°\nID: %s", x, y, px, py, angle, player_id)
+    return string.format("mX: %.2f, mY: %.2f\nwX: %.2f, wY: %.2f\nAngle: %.2f°\nID: %s", x, y, px, py, angle, player_id)
 end
 
 local cellHeightPercent = 0.125  -- 12.5% of screen height
