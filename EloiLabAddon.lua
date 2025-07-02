@@ -1,5 +1,24 @@
+--- Color to mark the border of the map and the center of it
+local colorMapBorder = { r = 1, g = 0.4, b = 0.7, a = 1 } -- Pink
+--- Color to make the borde of the screen
+local borderColor = { r = 1, g = 0.5, b = 0, a = 1 } -- Orange
+
+
+
+
+
+
+
+
+
+
+
 local isClassic = false
 local isRetail = false
+
+
+
+
 
 -- Check if the game is running in any Classic version
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or
@@ -50,11 +69,6 @@ PrintUtility.ForcePrint = function (self, message)
         print(message)
     
 end
-
-
-
-
-
 
 
 --||||||||      SOME STORAGE     |||||||||
@@ -231,6 +245,72 @@ end
 
 
 
+
+
+--------------------------------------------------
+
+
+
+
+
+
+-- Create a full-screen frame
+local borderFrame = CreateFrame("Frame", "OrangeBorderFrame", UIParent)
+borderFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+borderFrame:SetAllPoints(UIParent)
+
+
+-- Top
+local top = borderFrame:CreateTexture(nil, "OVERLAY")
+top:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+top:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
+top:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
+top:SetHeight(10)
+
+-- Bottom
+local bottom = borderFrame:CreateTexture(nil, "OVERLAY")
+bottom:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+bottom:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
+bottom:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
+bottom:SetHeight(10)
+
+-- Left
+local left = borderFrame:CreateTexture(nil, "OVERLAY")
+left:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+left:SetPoint("TOPLEFT", borderFrame, "TOPLEFT", 0, 0)
+left:SetPoint("BOTTOMLEFT", borderFrame, "BOTTOMLEFT", 0, 0)
+left:SetWidth(10)
+
+-- Right
+local right = borderFrame:CreateTexture(nil, "OVERLAY")
+right:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a)
+right:SetPoint("TOPRIGHT", borderFrame, "TOPRIGHT", 0, 0)
+right:SetPoint("BOTTOMRIGHT", borderFrame, "BOTTOMRIGHT", 0, 0)
+right:SetWidth(10)
+
+
+local innerBorderFrameHeight = borderFrame:GetHeight() - 20 -- Subtract the height of the top and bottom borders
+local innerBorderFrameWidth = borderFrame:GetWidth() - 20 -- Subtract the width of the left and right borders
+
+
+
+
+local function ClearMinimapOverlays()
+    -- Remove the mask texture
+    Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8x8")
+
+end
+
+
+
+local hideMapMask = true
+if hideMapMask then
+   ClearMinimapOverlays()
+end
+
+
+
+-----------------------------------------------------
 
 
 
@@ -918,48 +998,100 @@ function getPlayerPosition()
     local split = { strsplit("-", player_guid or "") }
     local player_id = (split[2] or " ").."-"..(split[3] or " ")
 
+    if displayPlayerId == true then
+        return string.format("mX: %.2f, mY: %.2f\nwX: %.2f, wY: %.2f\nAngle: %.2f°\nID: %s", x, y, px, py, angle, player_id)
+    else
+        return string.format("mX: %.2f, mY: %.2f\nwX: %.2f, wY: %.2f\nAngle: %.2f°", x, y, px, py, angle)
+    end
     -- Return formatted string
-    return string.format("mX: %.2f, mY: %.2f\nwX: %.2f, wY: %.2f\nAngle: %.2f°\nID: %s", x, y, px, py, angle, player_id)
 end
 
-local cellHeightPercent = 0.125  -- 12.5% of screen height
-local cellSize = UIParent:GetHeight() * cellHeightPercent
-local halfCellSize = cellSize / 2.0
 
--- /reload
-local function createColorFrame(xOffset, yOffset, updateFunction)
-    local frame = CreateFrame("Frame", nil, UIParent)
-    frame:SetSize(25, cellSize)
-    frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", xOffset, yOffset)
-    frame:SetFrameStrata("TOOLTIP") -- Set the frame strata to "TOOLTIP" to display it over all interface
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------- HERE
+local cellHeightPercent = 0.125  -- 12.5% of screen height
+local frameWidth = 25
+
+-- Create a semi-transparent background frame covering the entire UIParent
+local backgroundFrame = CreateFrame("Frame", "EloiLabBackgroundFrame", UIParent)
+backgroundFrame:SetAllPoints(UIParent)
+backgroundFrame:SetFrameStrata("BACKGROUND")
+backgroundFrame:SetFrameLevel(0)
+
+local bgTexture = backgroundFrame:CreateTexture(nil, "BACKGROUND")
+bgTexture:SetAllPoints()
+bgTexture:SetColorTexture(1, 0, 0, 0.1) -- Black with 80% opacity
+
+-- Ensure innerBorderFrameHeight is set after borderFrame is initialized
+
+-- Improved createColorFrame function for right-side color bars
+local function createColorFrameRight(xOffset, yOffset, updateFunction)
+    local frame = CreateFrame("Frame", nil, backgroundFrame)
+    frame:SetSize(frameWidth, 10)
+    frame:SetPoint("TOPRIGHT", backgroundFrame, "TOPRIGHT", xOffset, yOffset)
+    frame:SetFrameStrata("TOOLTIP")
     frame:SetFrameLevel(GameTooltip:GetFrameLevel() + 10)
 
     local texture = frame:CreateTexture(nil, "BACKGROUND")
     texture:SetAllPoints()
-    texture:SetColorTexture(1, 1, 1)  -- Initial color
+    texture:SetColorTexture(1, 1, 1)
 
     frame:SetScript("OnUpdate", function(self, elapsed)
-        local r, g, b = updateFunction()
+        local cellSize = (borderFrame:GetHeight() - 20) * cellHeightPercent
+        if self:GetHeight() ~= cellSize then
+            self:SetSize(frameWidth, cellSize)
+            self:SetPoint("TOPRIGHT", backgroundFrame, "TOPRIGHT", xOffset,-10+( yOffset * cellSize))
+        end
+
+        local r, g, b = 1, 1, 1
+        if type(updateFunction) == "function" then
+            local rr, gg, bb = updateFunction()
+            if tonumber(rr) then r = rr end
+            if tonumber(gg) then g = gg end
+            if tonumber(bb) then b = bb end
+        end
         texture:SetColorTexture(r, g, b)
     end)
 
     return texture
 end
 
-
 local function createColorFrameLeft(xOffset, yOffset, updateFunction)
-    local frame = CreateFrame("Frame", nil, UIParent)
-    frame:SetSize(25, cellSize)
-    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", xOffset, yOffset)
-    frame:SetFrameStrata("TOOLTIP") -- Set the frame strata to "TOOLTIP" to display it over all interface
+    local frame = CreateFrame("Frame", nil, backgroundFrame)
+    frame:SetSize(frameWidth, 10)
+    frame:SetPoint("TOPLEFT", backgroundFrame, "TOPLEFT", xOffset, yOffset)
+    frame:SetFrameStrata("TOOLTIP")
     frame:SetFrameLevel(GameTooltip:GetFrameLevel() + 10)
 
     local texture = frame:CreateTexture(nil, "BACKGROUND")
     texture:SetAllPoints()
-    texture:SetColorTexture(1, 1, 1)  -- Initial color
+    texture:SetColorTexture(1, 1, 1)
 
     frame:SetScript("OnUpdate", function(self, elapsed)
-        local r, g, b = updateFunction()
+        local cellSize = (borderFrame:GetHeight() - 20) * cellHeightPercent
+        if self:GetHeight() ~= cellSize then
+            self:SetSize(frameWidth, cellSize)
+            self:SetPoint("TOPLEFT", backgroundFrame, "TOPLEFT", xOffset,-10+( yOffset * cellSize))
+        end
+
+        local r, g, b = 1, 1, 1
+        if type(updateFunction) == "function" then
+            local rr, gg, bb = updateFunction()
+            if tonumber(rr) then r = rr end
+            if tonumber(gg) then g = gg end
+            if tonumber(bb) then b = bb end
+        end
         texture:SetColorTexture(r, g, b)
     end)
 
@@ -967,25 +1099,25 @@ local function createColorFrameLeft(xOffset, yOffset, updateFunction)
 end
 
 -- Position Color
-createColorFrame(0, 0, getCoordinateColor)
+createColorFrameRight(0, 0, getCoordinateColor)
 
 -- World Position X
-createColorFrame(0, -cellSize, function() return getWorldPosition(true) end)
+createColorFrameRight(0, -1 , function() return getWorldPosition(true) end)
 
 -- World Position Y
-createColorFrame(0, -2 * cellSize, function() return getWorldPosition(false) end)
+createColorFrameRight(0, -2 , function() return getWorldPosition(false) end)
 
 -- Heal and XP
-createColorFrame(0, -3 * cellSize, getHealAndXp)
+createColorFrameRight(0, -3 , getHealAndXp)
 
 -- Player ID Part One
-createColorFrame(0, -6 * cellSize, function()
+createColorFrameRight(0, -6 , function()
     local r1, g1, b1 =  getPlayerAsColor("player")
     return r1, g1, b1
 end)
 
 -- Player ID Part Two
-createColorFrame(0, -7 * cellSize, function()
+createColorFrameRight(0, -7 , function()
     local _, _, _, r2, g2, b2 = getPlayerAsColor("player")
     return r2, g2, b2
 end)
@@ -1001,7 +1133,7 @@ end)
 
 
 -- Integer Action out
-int_texture2 = createColorFrame(0, -4 * cellSize, function()
+int_texture2 = createColorFrameRight(0, -4 , function()
 
     local playerLifePercent01 = UnitHealth("player") / UnitHealthMax("player")
     local partyLifePercent01 = UnitHealth("party1") / UnitHealthMax("party1")
@@ -1047,7 +1179,7 @@ function unsigned_integer_to_rgb_bytes(value)
     return r, g, b
 end
 
-int_texture1 = createColorFrame(0, -5 * cellSize, function()
+int_texture1 = createColorFrameRight(0, -5 , function()
     local int_xp = UnitXP("player")
     local int_999999 = int_xp % 1000000
     local r_99 = math.floor(int_999999 / 10000) % 100
@@ -1080,29 +1212,29 @@ end)
 
 
 
-createColorFrameLeft(0, -0 * cellSize, function()
+createColorFrameLeft(0, -0 , function()
     return 0,1,0
 end) 
-createColorFrameLeft(0, -1 * cellSize, function()
+createColorFrameLeft(0, -1 , function()
     return 0,1,0
 end)
- createColorFrameLeft(0, -2 * cellSize, function()
+ createColorFrameLeft(0, -2 , function()
     return 0,1,0
 end)
- createColorFrameLeft(0, -3 * cellSize, function()
+ createColorFrameLeft(0, -3 , function()
     return 0,1,0
 end)
- createColorFrameLeft(0, -4 * cellSize, function()
+ createColorFrameLeft(0, -4 , function()
     return 0,1,0
 end)
 
 
-createColorFrameLeft(0, -6 * cellSize, function()
+createColorFrameLeft(0, -6 , function()
     local r, g, b, _, _, _ = getPlayerAsColorFocus()
     return r, g, b
 end)
 
-createColorFrameLeft(0, -7 * cellSize, function()
+createColorFrameLeft(0, -7 , function()
     local _, _, _, r, g, b = getPlayerAsColorFocus()
     return r, g, b
 end)
@@ -1112,7 +1244,7 @@ end)
 
 
 
-createColorFrameLeft(0, -5 * cellSize, function()
+createColorFrameLeft(0, -5 , function()
     local targetLifePercent01 = UnitHealth("target") / UnitHealthMax("target")
     local targetLevel = UnitLevel("target") /255.0
     local targetPower = UnitPower("target") / UnitPowerMax("target")
@@ -1807,69 +1939,69 @@ end
 local fontPath = "Interface\\AddOns\\EloiLab\\Fonts\\free3of9.ttf"
 
 -- Create the frame
--- local frameCode = CreateFrame("Frame", "BarcodeFrame", UIParent)
--- frameCode:SetSize(300, 60) -- 30% of screen width
--- frameCode:SetPoint("TOPLEFT", 30, -5) -- Position at top-left corner with 10px offset
--- frameCode:Show()
+local frameCode = CreateFrame("Frame", "BarcodeFrame", UIParent)
+frameCode:SetSize(300, 60) -- 30% of screen width
+frameCode:SetPoint("TOPLEFT", 30, -5) -- Position at top-left corner with 10px offset
+frameCode:Show()
 
 -- -- Background (optional)
--- frameCode.bg = frameCode:CreateTexture(nil, "BACKGROUND")
--- frameCode.bg:SetAllPoints()
--- frameCode.bg:SetColorTexture(1, 1, 1, 1) -- Slightly transparent white background
+frameCode.bg = frameCode:CreateTexture(nil, "BACKGROUND")
+frameCode.bg:SetAllPoints()
+frameCode.bg:SetColorTexture(1, 1, 1, 1) -- Slightly transparent white background
 
 -- -- Create the text
--- frameCode.text = frameCode:CreateFontString(nil, "OVERLAY")
--- frameCode.text:SetFont(fontPath, 48, "") -- Use the font without additional effects
--- frameCode.text:SetText("Hello World 42 2501")
--- frameCode.text:SetTextColor(0, 0, 0) -- Set text color to black
--- frameCode.text:SetPoint("CENTER")
+frameCode.text = frameCode:CreateFontString(nil, "OVERLAY")
+frameCode.text:SetFont(fontPath, 48, "") -- Use the font without additional effects
+frameCode.text:SetText("Hello World 42 2501")
+frameCode.text:SetTextColor(0, 0, 0) -- Set text color to black
+frameCode.text:SetPoint("CENTER")
 
 -- -- Add text in frameCode with total width and 5-pixel height
--- local textHeight = 12 -- Adjusted for better readability
--- local textWidth = frameCode:GetWidth()
--- local textString = frameCode:CreateFontString(nil, "OVERLAY")
--- textString:SetFont("Fonts\\ARIALN.TTF", textHeight) -- Using a more readable font
--- textString:SetPoint("TOP", frameCode, "TOP", 0, -5)
--- textString:SetText("Sample Text")
--- textString:SetTextColor(0, 0, 0, 1) -- Black color for the text
+local textHeight = 12 -- Adjusted for better readability
+local textWidth = frameCode:GetWidth()
+local textString = frameCode:CreateFontString(nil, "OVERLAY")
+textString:SetFont("Fonts\\ARIALN.TTF", textHeight) -- Using a more readable font
+textString:SetPoint("TOP", frameCode, "TOP", 0, -5)
+textString:SetText("Sample Text")
+textString:SetTextColor(0, 0, 0, 1) -- Black color for the text
 
 
 
--- -- Adjust text width to fit within the frame
--- frameCode.text:SetWidth(frameCode:GetWidth() - 20) -- Add padding
--- frameCode.text:SetWordWrap(false) -- Disable word wrapping
+-- Adjust text width to fit within the frame
+frameCode.text:SetWidth(frameCode:GetWidth() - 20) -- Add padding
+frameCode.text:SetWordWrap(false) -- Disable word wrapping
 
--- -- Function to encode text into Code 128 format
--- local function encodeToBarcodeTFB(input)
---     input = input:gsub(" ", "") -- Remove spaces from the input string
---     input = input:gsub("-", "") -- Remove hyphens from the input string
+-- Function to encode text into Code 128 format
+local function encodeToBarcodeTFB(input)
+    input = input:gsub(" ", "") -- Remove spaces from the input string
+    input = input:gsub("-", "") -- Remove hyphens from the input string
     
---     return '*'..input..'*'
--- end
+    return '*'..input..'*'
+end
 
--- -- Update the text every 0.5 seconds with the target's GUID info
--- C_Timer.NewTicker(0.5, function()
---     if not frameCode or not frameCode.text then
---         print("Error: frameCode or frameCode.text is not initialized.")
---         return
---     end
---     local playerId = UnitGUID("player")
---     local targetGUID = UnitGUID("mouseover") or UnitGUID("target")
---     local isPlayer = UnitIsPlayer("mouseover") or UnitIsPlayer("target")
+-- Update the text every 0.5 seconds with the target's GUID info
+C_Timer.NewTicker(0.5, function()
+    if not frameCode or not frameCode.text then
+        print("Error: frameCode or frameCode.text is not initialized.")
+        return
+    end
+    local playerId = UnitGUID("player")
+    local targetGUID = UnitGUID("mouseover") or UnitGUID("target")
+    local isPlayer = UnitIsPlayer("mouseover") or UnitIsPlayer("target")
 
     
 
---     if targetGUID and playerId ~= targetGUID and isPlayer then
---         local encodedText = encodeToBarcodeTFB(targetGUID:gsub("Player%-", ""))
+    if targetGUID and playerId ~= targetGUID and isPlayer then
+        local encodedText = encodeToBarcodeTFB(targetGUID:gsub("Player%-", ""))
 
---         textString:SetText("Code 39: " .. targetGUID) 
+        textString:SetText("Code 39: " .. targetGUID) 
 
---         frameCode.text:SetText(encodedText) 
---         frameCode:Show()
---     else
---         frameCode:Hide()
---     end
--- end)
+        frameCode.text:SetText(encodedText) 
+        frameCode:Show()
+    else
+        frameCode:Hide()
+    end
+end)
 
 -- MyAddon.lua
 
@@ -2027,3 +2159,86 @@ LogoDebugMode.Toogle_charDebugMode = function ()
         end
         
     end
+
+
+
+
+
+-- local iconChanger = CreateFrame("Frame")
+-- iconChanger:RegisterEvent("PLAYER_LOGIN")
+-- iconChanger:RegisterEvent("MINIMAP_UPDATE_TRACKING")
+
+-- local function UpdateTrackingIcon()
+--     for i = 1, GetNumTrackingTypes() do
+--         local name, texture, active, category = GetTrackingInfo(i)
+
+--         if active and name then
+--             if name:lower():find("herb") then
+--                 MiniMapTrackingIcon:SetTexture("Interface\\AddOns\\EloiLab\\Images\\SquareYellow.tga")
+--                 return
+--             elseif name:lower():find("mineral") then
+--                 MiniMapTrackingIcon:SetTexture("Interface\\AddOns\\EloiLab\\Images\\SquareYellow.tga")
+--                 return
+--             end
+--         end
+--     end
+-- end
+
+-- iconChanger:SetScript("OnEvent", function(self, event, ...)
+--     if event == "PLAYER_LOGIN" or event == "MINIMAP_UPDATE_TRACKING" then
+--         UpdateTrackingIcon()
+--     end
+-- end)
+
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+f:SetScript("OnEvent", function()
+    if _G.PinkMinimapBorder then return end
+
+    local border = CreateFrame("Frame", "PinkMinimapBorder", Minimap)
+    border:SetAllPoints(Minimap)
+    border:SetFrameStrata("MEDIUM")
+
+    local thickness = 3
+
+    -- Top
+    local top = border:CreateTexture(nil, "OVERLAY")
+    top:SetColorTexture(colorMapBorder.r, colorMapBorder.g, colorMapBorder.b, colorMapBorder.a)
+    top:SetPoint("TOPLEFT", -thickness, thickness)
+    top:SetPoint("TOPRIGHT", thickness, thickness)
+    top:SetHeight(thickness)
+
+    -- Bottom
+    local bottom = border:CreateTexture(nil, "OVERLAY")
+    bottom:SetColorTexture(colorMapBorder.r, colorMapBorder.g, colorMapBorder.b, colorMapBorder.a)
+    bottom:SetPoint("BOTTOMLEFT", -thickness, -thickness)
+    bottom:SetPoint("BOTTOMRIGHT", thickness, -thickness)
+    bottom:SetHeight(thickness)
+
+    -- Left
+    local left = border:CreateTexture(nil, "OVERLAY")
+    left:SetColorTexture(colorMapBorder.r, colorMapBorder.g, colorMapBorder.b, colorMapBorder.a)
+    left:SetPoint("TOPLEFT", -thickness, thickness)
+    left:SetPoint("BOTTOMLEFT", -thickness, -thickness)
+    left:SetWidth(thickness)
+
+    -- Right
+    local right = border:CreateTexture(nil, "OVERLAY")
+    right:SetColorTexture(colorMapBorder.r, colorMapBorder.g, colorMapBorder.b, colorMapBorder.a)
+    right:SetPoint("TOPRIGHT", thickness, thickness)
+    right:SetPoint("BOTTOMRIGHT", thickness, -thickness)
+    right:SetWidth(thickness)
+end)
+
+
+-- add a pink square of 2 or 3 pixels in the middle of the minimap
+local pinkSquare = CreateFrame("Frame", "PinkMinimapSquare", Minimap)
+pinkSquare:SetSize(3, 3) -- Set size to 3x3 pixels
+pinkSquare:SetPoint("CENTER", Minimap, "CENTER")
+local pinkSquareTexture = pinkSquare:CreateTexture(nil, "OVERLAY")
+pinkSquareTexture:SetColorTexture(colorMapBorder.r, colorMapBorder.g, colorMapBorder.b, colorMapBorder.a) -- Pink color
+pinkSquareTexture:SetAllPoints(pinkSquare) -- Make the texture fill the frame
+
+
