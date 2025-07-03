@@ -1207,8 +1207,58 @@ end)
 
 
 
+local last_loot_opened_object_id_list={}
+local last_loot_opened_object_id_focus = nil
+
+local last_loot_opened_object_id_next_change =15
+
+-- every second, check if object id in list to dequeue in focus
+C_Timer.NewTicker(0.1, function()
+
+    if last_loot_opened_object_id_next_change > 0 then
+            last_loot_opened_object_id_next_change = last_loot_opened_object_id_next_change - 1
+            return
+    end
+
+    local length = #last_loot_opened_object_id_list
+    if length > 0 then
+            last_loot_opened_object_id_focus = last_loot_opened_object_id_list[1]
+            table.remove(last_loot_opened_object_id_list, 1) -- Remove the first element
+            last_loot_opened_object_id_next_change= 50 -- Reset the next change timer
+        
+    else 
+        last_loot_opened_object_id_focus = nil -- Reset focus if list is empty
+        last_loot_opened_object_id_next_change=0
+    end
+end)
+
+function getColorForLootObjectIdFocus()
+    -- Get the color for the focused loot object ID
+    if last_loot_opened_object_id_focus then
+
+        return getColorForLootObjectId(last_loot_opened_object_id_focus)
+    else
+        return 0,0,0 -- Default to black if no focus
+    end
+end
+function getColorForLootObjectId(objectId)
+    if objectId==nil or not objectId or type(objectId) ~= "number" then
+        return 0,0,0 -- Default to black if no valid object ID
+    end
+    if objectId > 16777215 then
+        return 1, 0, 0 -- Red for invalid object ID
+    end
+    -- Convert the object ID to a color
+    local r = (objectId % 256) / 255.0
+    local g = (math.floor(objectId / 256) % 256) / 255.0
+    local b = (math.floor(objectId / (256 * 256)) % 256) / 255.0
+    return r, g, b
+end
 
 
+createColorFrameLeft(0, -4 , function()
+    return getColorForLootObjectIdFocus()
+end)
 
 
 
@@ -1224,9 +1274,7 @@ end)
  createColorFrameLeft(0, -3 , function()
     return 0,1,0
 end)
- createColorFrameLeft(0, -4 , function()
-    return 0,1,0
-end)
+ 
 
 
 createColorFrameLeft(0, -6 , function()
@@ -2240,5 +2288,102 @@ pinkSquare:SetPoint("CENTER", Minimap, "CENTER")
 local pinkSquareTexture = pinkSquare:CreateTexture(nil, "OVERLAY")
 pinkSquareTexture:SetColorTexture(colorMapBorder.r, colorMapBorder.g, colorMapBorder.b, colorMapBorder.a) -- Pink color
 pinkSquareTexture:SetAllPoints(pinkSquare) -- Make the texture fill the frame
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local f = CreateFrame("Frame")
+
+-- Listen for the loot opened event
+f:RegisterEvent("LOOT_OPENED")
+
+f:SetScript("OnEvent", function(self, event, ...)
+    if event == "LOOT_OPENED" then
+        local autoLoot = ...
+        local sourceGUID = GetLootSourceInfo(1) -- Get first loot slot source GUID
+        
+        if sourceGUID then
+            print("Loot received from GUID:", sourceGUID)
+        else
+            print("No source GUID found.")
+        end
+    end
+end)
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("LOOT_OPENED")
+
+-- Example lists — extend as needed
+local miningNodeIDs = {
+    [1731] = true,   -- Copper Vein
+    [1732] = true,   -- Tin Vein
+    [2040] = true,   -- Mithril Deposit
+    [175404] = true, -- Rich Thorium Vein
+    -- Add more mining node object IDs
+}
+
+local herbNodeIDs = {
+    [1617] = true,   -- Silverleaf
+    [1618] = true,   -- Peacebloom
+    [2041] = true,   -- Liferoot
+    [142142] = true, -- Sungrass
+    -- Add more herb node object IDs
+}
+
+local function getObjectIDFromGUID(guid)
+    local parts = { strsplit("-", guid) }
+    return tonumber(parts[6]) -- 6th part is the objectID
+end
+
+f:SetScript("OnEvent", function(self, event, ...)
+    if event == "LOOT_OPENED" then
+        for i = 1, GetNumLootItems() do
+            local guid = GetLootSourceInfo(i)
+            if guid then
+                local guidType = strsplit("-", guid)
+                if guidType == "GameObject" then
+                    local objectID = getObjectIDFromGUID(guid)
+                    -- add to list last_loot_opened_object_id_list
+                    
+                    table.insert(last_loot_opened_object_id_list, objectID)
+                    
+                    if miningNodeIDs[objectID] then
+                        print("Mined node (ID:", objectID, ")")
+                    elseif herbNodeIDs[objectID] then
+                        print("Herb gathered (ID:", objectID, ")")
+                    else
+                        print("Gathered unknown object (ID:", objectID, ")")
+                    end
+                end
+            end
+        end
+    end
+end)
+
+
+
+
+
+
+
+
 
 
