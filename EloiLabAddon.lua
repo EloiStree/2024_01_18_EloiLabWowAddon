@@ -2478,7 +2478,7 @@ function turn_to_rgb24_bit_left_right(bitsArrayOf24MaxLenght, debugPreviousState
     if debugPreviousState ~= isState then
         debugPreviousState = isState
         
-        bool_debug = false
+        bool_debug = true
         if bool_debug then
            
             print("New State: " .. isState)
@@ -2493,38 +2493,93 @@ local function IsOnGround()
 end
 
 
+local MIRRORTIMER_NUMTIMERS = 3  -- As of WoW 3.2, there are 3 possible mirror timers
 
-function IsBreathUnderPercent(percent100)
-    local breath = UnitPower("player", Enum.PowerType.Breath)
-    local maxBreath = UnitPowerMax("player", Enum.PowerType.Breath)
-    
-    if maxBreath == 0 then
-        return false -- Player is not underwater or breath mechanic not active
+-- Constants for mirror timer types (these are the strings returned by GetMirrorTimerInfo)
+local TIMER_BREATH = "BREATH"
+local TIMER_FATIGUE = "EXHAUSTION"  -- Note: The game calls it "EXHAUSTION" but it's the fatigue mechanic
+
+local function GetMirrorTimerData(timerType)
+    for i = 1, MIRRORTIMER_NUMTIMERS do
+        local timer, initial, maxvalue, scale, paused, label = GetMirrorTimerInfo(i)
+        if timer == timerType then
+            return {
+                current = GetMirrorTimerProgress(timer),
+                max = maxvalue,
+                paused = paused,
+                label = label,
+                initial = initial,
+                scale = scale
+            }
+        end
     end
-    
-    local breathPercent = (breath / maxBreath) * 100
-    return breathPercent < percent100
+    return nil  -- Timer not active
 end
+
+local function GetBreathingPercent()
+    local timerData = GetMirrorTimerData(TIMER_BREATH)
+    if not timerData then
+        return 100.0  -- Not underwater, consider breath full
+    end
+    return (timerData.current / timerData.max) * 100.0
+end
+
+local function GetFatiguePercent()
+    local timerData = GetMirrorTimerData(TIMER_FATIGUE)
+    if not timerData then
+        return 100.0  -- No fatigue active, consider full
+    end
+    return (timerData.current / timerData.max) * 100.0
+end
+
+local function IsUnderPercentBreathing(value)
+    if type(value) ~= "number" then
+        error("IsUnderPercentBreathing: value must be a number")
+    end
+    local breathingPercent = GetBreathingPercent()
+    return breathingPercent < value
+end
+
+local function IsUnderPercentFatigue(value)
+    if type(value) ~= "number" then
+        error("IsUnderPercentFatigue: value must be a number")
+    end
+    local fatiguePercent = GetFatiguePercent()
+    return fatiguePercent < value
+end
+
+
 
 local previou24BitsMovingState = ""
 -- Player state
 createColorFrameLeft(0, -3, function()
   
    red,green,blue, previou24BitsMovingState = turn_to_rgb24_bit_left_right({
-        IsCasting() and 1 or 0,
-        IsGatheringHerbs() and 1 or 0,
-        IsGatheringMining() and 1 or 0,
-        IsFishing() and 1 or 0,
-        IsOnGround() and 1 or 0,
-        IsPlayerInCombat() and 1 or 0,
-        IsPlayerMounted() and 1 or 0,
-        IsPlayerFlying() and 1 or 0,
-        IsPlayerFalling() and 1 or 0,
-        IsPlayerSwimming() and 1 or 0,
-        IsPlayerSteathing() and 1 or 0,
-        IsPlayerDeath() and 1 or 0,
-        IsBreathUnderPercent(98) and 1 or 0,
-        IsBreathUnderPercent(20) and 1 or 0,
+        IsCasting() and 1 or 0,                 -- 1
+        IsGatheringHerbs() and 1 or 0,          -- 2    
+        IsGatheringMining() and 1 or 0,         -- 3
+        IsFishing() and 1 or 0,                 -- 4            
+        IsOnGround() and 1 or 0,                -- 5
+        IsPlayerInCombat() and 1 or 0,          -- 6
+        IsPlayerMounted() and 1 or 0,           -- 7
+        IsPlayerFlying() and 1 or 0,            -- 8
+        IsPlayerFalling() and 1 or 0,           -- 9    
+        IsPlayerSwimming() and 1 or 0,          -- 10
+        IsPlayerSteathing() and 1 or 0,         -- 11
+        IsPlayerDeath() and 1 or 0,             -- 12   
+        IsUnderPercentBreathing(98) and 1 or 0,     -- 13
+        IsUnderPercentBreathing(20) and 1 or 0,     -- 14
+        IsUnderPercentFatigue(98) and 1 or 0,      -- 15
+        IsUnderPercentFatigue(20) and 1 or 0,      -- 16
+        0 , -- 17
+        0 , -- 18
+        0 , -- 19
+        0 , -- 20
+        0 , -- 21
+        0 , -- 22
+        0 , -- 23
+        0 , -- 24s
+        
     }, previou24BitsMovingState)
 
     return red, green, blue
@@ -2623,25 +2678,32 @@ createColorFrameLeft(0, -2, function()
     red, green, blue, previou24BitsAttackState =
     turn_to_rgb24_bit_left_right({
         -- RED
-        HasTarget() and 1 or 0,
-        IsTargetPlayer() and 1 or 0,
-        IsTargetEnemy() and 1 or 0,
-        IsTargetHasCorruption() and 1 or 0,
-        IsTargetHasAgony() and 1 or 0,  
-        IsTargetInCombat() and 1 or 0,
-        IsTargetCasting() and 1 or 0,
-        IsTargetDeath() and 1 or 0,
-        -- Green
-        IsTargetFullLife() and 1 or 0,
-        IsTargetWithin10Yards() and 1 or 0,
-        IsTargetWithin30Yards() and 1 or 0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        -- Blue
-        IsGlobalCooldownActive() and 1 or 0
+        HasTarget() and 1 or 0,                   --1
+        IsTargetPlayer() and 1 or 0,   --2
+        IsTargetEnemy() and 1 or 0,   --3        
+        IsTargetInCombat() and 1 or 0,   --4
+        IsTargetCasting() and 1 or 0,   --5
+        IsTargetDeath() and 1 or 0,   --6
+        -- Green   --
+        IsTargetFullLife() and 1 or 0,   --7
+        IsTargetWithin10Yards() and 1 or 0,   --8
+        IsTargetWithin30Yards() and 1 or 0,   --9
+        0,   --10
+        0,   --11
+        0,   --12
+        0,   --13
+        0,   --14
+        0,   --15
+        0,   --16
+        -- Blue   --
+        IsGlobalCooldownActive() and 1 or 0 ,   --17
+        0,   --18
+        0,   --19
+        0,   --20
+        0,   --21
+        0,   --22
+        IsTargetHasCorruption() and 1 or 0,   --23
+        IsTargetHasAgony() and 1 or 0,     --24
 
     },previou24BitsAttackState)
     return red, green, blue
