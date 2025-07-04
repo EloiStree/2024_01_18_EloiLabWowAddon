@@ -1,7 +1,7 @@
 --- Color to mark the border of the map and the center of it
 local colorMapBorder = { r = 1, g = 0.4, b = 0.7, a = 1 } -- Pink
 --- Color to make the borde of the screen
-local borderColor = { r = 1, g = 0.5, b = 0, a = 1 } -- Orange
+local borderColor = { r = 0, g = 1, b = 0, a = 1 } -- Orange
 
 
 
@@ -1268,12 +1268,7 @@ end)
 createColorFrameLeft(0, -1 , function()
     return 0,1,0
 end)
- createColorFrameLeft(0, -2 , function()
-    return 0,1,0
-end)
- createColorFrameLeft(0, -3 , function()
-    return 0,1,0
-end)
+
  
 
 
@@ -2381,9 +2376,273 @@ end)
 
 
 
+function IsCastingEquals(s)
+    local castName, _, _, _, _, _, spellID = UnitCastingInfo("player")
+    -- trim
+    s = trimString(s)
+    castName = castName and trimString(castName) or ""
+
+    if castName == s then
+        return true
+    end
+    return false
+end
+
+function IsGatheringHerbs()
+    return IsCastingEquals("Herb Gathering ") -- Replace with actual herb gathering spell names/IDs
+end
+
+function IsGatheringMining()
+    return IsCastingEquals("Mining") -- Replace with actual mining spell names/IDs
+end
+
+function IsFishing()
+    return IsCastingEquals("Fishing") -- Replace with actual fishing spell names/IDs
+end
+
+
+function IsPlayerInCombat()
+    return UnitAffectingCombat("player")
+end
+
+
+function IsPlayerSwimming()
+    return IsSwimming() or IsSubmerged()
+end
+
+function IsPlayerFalling()
+    return IsFalling()
+
+end
+
+function IsPlayerMounted()
+    return IsMounted()
+end
+
+function IsPlayerFlying()
+    return IsFlying() 
+end
+
+function IsPlayerBeathingUnderwater()
+    return  IsSubmerged()
+end
+
+
+function HasTarget()
+    return UnitExists("target") and not UnitIsDeadOrGhost("target")
+end
+
+
+
+function IsPlayerSteathing()
+    return IsStealthed()
+end
+
+function IsUnderWater()
+    return IsSwimming() and IsSubmerged()
+end
+
+function IsPlayerDeath()
+    return UnitIsDeadOrGhost("player")
+end
+
+function IsCasting()
+    return UnitCastingInfo("player") ~= nil
+end
+
+function turn_to_rgb24_bit_left_right(bitsArrayOf24MaxLenght, debugPreviousState)
+    local red = 0
+    local green = 0
+    local blue = 0
+    local isState = ""
+
+    local bitsLenght = #bitsArrayOf24MaxLenght
+    for i = 1, 24 do
+        if i <= bitsLenght then
+            if bitsArrayOf24MaxLenght[i] == 1 then
+                if i <= 8 then
+                    red = red + (2 ^ (8 - i))
+                elseif i <= 16 then
+                    green = green + (2 ^ (16 - i))
+                else
+                    blue = blue + (2 ^ (24 - i))
+                end
+            end
+            isState = isState .. tostring(bitsArrayOf24MaxLenght[i])
+        else
+            bitsArrayOf24MaxLenght[i] = 0 -- Fill the rest with 0s if less than 24 bits provided
+            isState = isState .. "0"
+        end
+    end
+
+    if debugPreviousState ~= isState then
+        debugPreviousState = isState
+        
+        bool_debug = false
+        if bool_debug then
+           
+            print("New State: " .. isState)
+        end
+    end
+
+    return red, green, blue, debugPreviousState
+end
+
+local function IsOnGround()
+    return not IsFlying() and not IsFalling() and not IsSwimming() and not UnitOnTaxi("player")
+end
+
+
+
+function IsBreathUnderPercent(percent100)
+    local breath = UnitPower("player", Enum.PowerType.Breath)
+    local maxBreath = UnitPowerMax("player", Enum.PowerType.Breath)
+    
+    if maxBreath == 0 then
+        return false -- Player is not underwater or breath mechanic not active
+    end
+    
+    local breathPercent = (breath / maxBreath) * 100
+    return breathPercent < percent100
+end
+
+local previou24BitsMovingState = ""
+-- Player state
+createColorFrameLeft(0, -3, function()
+  
+   red,green,blue, previou24BitsMovingState = turn_to_rgb24_bit_left_right({
+        IsCasting() and 1 or 0,
+        IsGatheringHerbs() and 1 or 0,
+        IsGatheringMining() and 1 or 0,
+        IsFishing() and 1 or 0,
+        IsOnGround() and 1 or 0,
+        IsPlayerInCombat() and 1 or 0,
+        IsPlayerMounted() and 1 or 0,
+        IsPlayerFlying() and 1 or 0,
+        IsPlayerFalling() and 1 or 0,
+        IsPlayerSwimming() and 1 or 0,
+        IsPlayerSteathing() and 1 or 0,
+        IsPlayerDeath() and 1 or 0,
+        IsBreathUnderPercent(98) and 1 or 0,
+        IsBreathUnderPercent(20) and 1 or 0,
+    }, previou24BitsMovingState)
+
+    return red, green, blue
+end)
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+-- Check if target has a debuff called "Corruption" using AuraUtil.FindAuraByName
+local function IsTargetHasDebuff(debuffName)
+    if not UnitExists("target") then return false end
+    local aura = AuraUtil.FindAuraByName(debuffName, "target", "HARMFUL")
+    return aura ~= nil
+end
+
+
+function HasTarget()
+    return UnitExists("target") and not UnitIsDeadOrGhost("target")
+end
+
+function IsTargetPlayer()
+    return UnitIsPlayer("target")
+end
+function IsTargetEnemy()
+    return UnitCanAttack("player", "target")
+end
+
+
+function IsTargetHasCorruption()
+    return IsTargetHasDebuff("Corruption")
+end
+
+function IsTargetHasAgony()
+    return IsTargetHasDebuff("Agony") 
+end
+
+
+function IsTargetInCombat()
+    return UnitAffectingCombat("target")
+end
+function IsTargetCasting()
+    return UnitCastingInfo("target") ~= nil
+end
+function IsTargetDeath()
+    return UnitIsDeadOrGhost("target")
+end
+function IsTargetFullLife()
+    return UnitHealth("target") == UnitHealthMax("target")
+end
+
+
+function IsTargetInRange()
+    return UnitInRange("target") 
+end
+
+local function IsTargetWithinYards(value)
+    local unit = "target"
+    if UnitExists(unit) then
+        return CheckInteractDistance(unit, value) -- 2 means ~10 yards
+    else
+        return false
+    end
+end
+local function IsTargetWithin10Yards()
+    return IsTargetWithinYards(2) or IsTargetWithinYards(3) 
+end
+local function IsTargetWithin30Yards()
+    return IsTargetWithinYards(1) or IsTargetWithinYards(4)
+end
+
+
+local function IsGlobalCooldownActive()
+
+    local spellID = 61304 
+    local start, duration, enable = C_Spell.GetSpellCooldown(spellID)
+
+    return enable == 1 
+end
+
+local previou24BitsAttackState = ""
+-- Target State Demoniste
+createColorFrameLeft(0, -2, function()
+
+
+    red, green, blue, previou24BitsAttackState =
+    turn_to_rgb24_bit_left_right({
+        -- RED
+        HasTarget() and 1 or 0,
+        IsTargetPlayer() and 1 or 0,
+        IsTargetEnemy() and 1 or 0,
+        IsTargetHasCorruption() and 1 or 0,
+        IsTargetHasAgony() and 1 or 0,  
+        IsTargetInCombat() and 1 or 0,
+        IsTargetCasting() and 1 or 0,
+        IsTargetDeath() and 1 or 0,
+        -- Green
+        IsTargetFullLife() and 1 or 0,
+        IsTargetWithin10Yards() and 1 or 0,
+        IsTargetWithin30Yards() and 1 or 0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -- Blue
+        IsGlobalCooldownActive() and 1 or 0
+
+    },previou24BitsAttackState)
+    return red, green, blue
+end)
