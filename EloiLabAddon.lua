@@ -2509,21 +2509,47 @@ function turn_to_rgb24_bit_left_right(bitsArrayOf24MaxLenght, debugPreviousState
     local bitsLenght = #bitsArrayOf24MaxLenght
     for i = 1, 24 do
         if i <= bitsLenght then
-            if bitsArrayOf24MaxLenght[i] == 1 then
-                if i <= 8 then
-                    red = red + (2 ^ (8 - i))
-                elseif i <= 16 then
-                    green = green + (2 ^ (16 - i))
-                else
-                    blue = blue + (2 ^ (24 - i))
-                end
-            end
-            isState = isState .. tostring(bitsArrayOf24MaxLenght[i])
+            isState = isState .. ((bitsArrayOf24MaxLenght[i] == 1 or bitsArrayOf24MaxLenght[i] == true) and "1" or "0")
         else
-            bitsArrayOf24MaxLenght[i] = 0 -- Fill the rest with 0s if less than 24 bits provided
             isState = isState .. "0"
         end
     end
+
+    for i = 1, 24 do
+        local bitValue = bitsArrayOf24MaxLenght[i] or 0
+        if bitValue == 1 or bitValue == true then
+            if i == 1 then red = red + 128 end
+            if i == 2 then red = red + 64 end
+            if i == 3 then red = red + 32 end
+            if i == 4 then red = red + 16 end
+            if i == 5 then red = red + 8 end
+            if i == 6 then red = red + 4 end
+            if i == 7 then red = red + 2 end
+            if i == 8 then red = red + 1 end
+
+            if i == 9 then green = green + 128 end
+            if i == 10 then green = green + 64 end
+            if i == 11 then green = green + 32 end
+            if i == 12 then green = green + 16 end
+            if i == 13 then green = green + 8 end
+            if i == 14 then green = green + 4 end
+            if i == 15 then green = green + 2 end
+            if i == 16 then green = green + 1 end
+
+            if i == 17 then blue = blue + 128 end
+            if i == 18 then blue = blue + 64 end
+            if i == 19 then blue = blue + 32 end
+            if i == 20 then blue = blue + 16 end
+            if i == 21 then blue = blue + 8 end
+            if i == 22 then blue = blue + 4 end
+            if i == 23 then blue = blue + 2 end
+            if i == 24 then blue = blue + 1 end
+        end
+    end
+    red = red / 255
+    green = green / 255
+    blue = blue / 255
+  
 
     if debugPreviousState ~= isState then
         debugPreviousState = isState
@@ -2600,29 +2626,72 @@ end
 
 
 
+
+local function IsEnemyOneTargetingPlayer()
+
+
+    if not UnitExists("player") then return false end
+    local playerGUID = UnitGUID("player")
+    if not playerGUID then return false end
+
+    for i = 1, 40 do
+        local unit = "nameplate"..i
+        if UnitExists(unit) and UnitCanAttack("player", unit) then
+            local targetGUID = UnitGUID(unit.."target")
+            if targetGUID == playerGUID then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+
+
+
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+
+frame:SetScript("OnEvent", function()
+    local timestamp, subevent, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, spellName = CombatLogGetCurrentEventInfo()
+    
+    if destName == UnitName("player") then
+        print(sourceName .. " used " .. spellName .. " on you!")
+    end
+end)
+
+
+local function IsPetAlive()
+    return UnitExists("pet") and not UnitIsDeadOrGhost("pet")
+end
+
+
+
+
 local previou24BitsMovingState = ""
 -- Player state
 createColorFrameLeft(0, -3, function()
   
    red,green,blue, previou24BitsMovingState = turn_to_rgb24_bit_left_right({
-        IsCasting() and 1 or 0,                 -- 1
-        IsGatheringHerbs() and 1 or 0,          -- 2    
-        IsGatheringMining() and 1 or 0,         -- 3
-        IsFishing() and 1 or 0,                 -- 4            
-        IsOnGround() and 1 or 0,                -- 5
-        IsPlayerInCombat() and 1 or 0,          -- 6
-        IsPlayerMounted() and 1 or 0,           -- 7
-        IsPlayerFlying() and 1 or 0,            -- 8
-        IsPlayerFalling() and 1 or 0,           -- 9    
-        IsPlayerSwimming() and 1 or 0,          -- 10
-        IsPlayerSteathing() and 1 or 0,         -- 11
-        IsPlayerDeath() and 1 or 0,             -- 12   
-        IsUnderPercentBreathing(98) and 1 or 0,     -- 13
-        IsUnderPercentBreathing(20) and 1 or 0,     -- 14
-        IsUnderPercentFatigue(98) and 1 or 0,      -- 15
-        IsUnderPercentFatigue(20) and 1 or 0,      -- 16
-        HasDiscoveredZoneLastSeconds(1.5)  and 1 or 0, -- 17
-        0 , -- 18
+        IsCasting() and 1 or 0,                 -- 1 DONT CHANGE
+        IsGatheringHerbs() and 1 or 0,          -- 2 DONT CHANGE
+        IsGatheringMining() and 1 or 0,         -- 3 DONT CHANGE
+        IsFishing() and 1 or 0,                 -- 4 DONT CHANGE
+        IsOnGround() and 1 or 0,                -- 5 DONT CHANGE
+        IsPlayerInCombat() and 1 or 0,          -- 6 DONT CHANGE
+        IsPlayerMounted() and 1 or 0,           -- 7 DONT CHANGE
+        IsPlayerFlying() and 1 or 0,            -- 8 DONT CHANGE
+        IsPlayerFalling() and 1 or 0,           -- 9 DONT CHANGE
+        IsPlayerSwimming() and 1 or 0,          -- 10 DONT CHANGE
+        IsPlayerSteathing() and 1 or 0,         -- 11 DONT CHANGE
+        IsPlayerDeath() and 1 or 0,             -- 12 DONT CHANGE
+        IsUnderPercentBreathing(98) and 1 or 0,     -- 13 DONT CHANGE
+        IsUnderPercentBreathing(20) and 1 or 0,     -- 14 DONT CHANGE
+        IsUnderPercentFatigue(98) and 1 or 0,      -- 15 DONT CHANGE
+        IsUnderPercentFatigue(20) and 1 or 0,      -- 16 DONT CHANGE
+        HasDiscoveredZoneLastSeconds(1.5)  and 1 or 0, -- 17 DONT CHANGE
+        IsPetAlive() and 1 or 0 , -- 18
         0 , -- 19
         0 , -- 20
         0 , -- 21
@@ -2688,11 +2757,15 @@ function IsTargetDeath()
     return UnitIsDeadOrGhost("target")
 end
 function IsTargetFullLife()
+
+    if not UnitExists("target") then return false end
+    if not UnitHealthMax("target") or not UnitHealth("target") then return false end                                                                                                                    
+
     return UnitHealth("target") == UnitHealthMax("target")
 end
 
 
-function IsTargetInRange()
+function IsTargetInRange()                                                                          
     return UnitInRange("target") 
 end
 
@@ -2720,6 +2793,41 @@ local function IsGlobalCooldownActive()
     return enable == 1 
 end
 
+
+local function IsTargetFocusingPlayer()                                                                                                                                                                        
+    if not UnitExists("target") then return false end
+    local targetGUID = UnitGUID("target")
+    local playerGUID = UnitGUID("player")
+    if not targetGUID or not playerGUID then return false end
+
+    local focusUnit = "focus"
+    if UnitExists(focusUnit) and UnitGUID(focusUnit) == targetGUID then
+        return true
+    end                                                                                                                                                                     
+
+    return false
+end                                                                             
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local previou24BitsAttackState = ""
 -- Target State Demoniste
 createColorFrameLeft(0, -2, function()
@@ -2728,17 +2836,17 @@ createColorFrameLeft(0, -2, function()
     red, green, blue, previou24BitsAttackState =
     turn_to_rgb24_bit_left_right({
         -- RED
-        HasTarget() and 1 or 0,                   --1
-        IsTargetPlayer() and 1 or 0,   --2
-        IsTargetEnemy() and 1 or 0,   --3        
-        IsTargetInCombat() and 1 or 0,   --4
-        IsTargetCasting() and 1 or 0,   --5
-        IsTargetDeath() and 1 or 0,   --6
+        HasTarget() and 1 or 0,                   --1 DONT CHANGE
+        IsTargetPlayer() and 1 or 0,   --2 DONT CHANGE
+        IsTargetEnemy() and 1 or 0,   --3  DONT CHANGE
+        IsTargetInCombat() and 1 or 0,   --4  DONT CHANGE
+        IsTargetCasting() and 1 or 0,   --5 DONT CHANGE
+        IsTargetDeath() and 1 or 0,   --6 DONT CHANGE
         -- Green   --
-        IsTargetFullLife() and 1 or 0,   --7
-        IsTargetWithin10Yards() and 1 or 0,   --8
-        IsTargetWithin30Yards() and 1 or 0,   --9
-        0,   --10
+        IsTargetFullLife() and 1 or 0,   --7 DONT CHANGE
+        IsTargetWithin10Yards() and 1 or 0,   --8 DONT CHANGE
+        IsTargetWithin30Yards() and 1 or 0,   --9 DONT CHANGE
+        IsTargetFocusingPlayer() and 1 or 0,   --10 DONT CHANGE
         0,   --11
         0,   --12
         0,   --13
@@ -2746,14 +2854,14 @@ createColorFrameLeft(0, -2, function()
         0,   --15
         0,   --16
         -- Blue   --
-        IsGlobalCooldownActive() and 1 or 0 ,   --17
+        IsGlobalCooldownActive() and 1 or 0 ,   --17 DONT CHANGE
         0,   --18
         0,   --19
         0,   --20
         0,   --21
         0,   --22
-        IsTargetHasCorruption() and 1 or 0,   --23
-        IsTargetHasAgony() and 1 or 0,     --24
+        IsTargetHasCorruption() and 1 or 0,   --23 DONT CHANGE
+        IsTargetHasAgony() and 1 or 0,     --24 DONT CHANGE
 
     },previou24BitsAttackState)
     return red, green, blue
