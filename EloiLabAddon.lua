@@ -1274,7 +1274,7 @@ C_Timer.NewTicker(0.1, function()
     if length > 0 then
             last_loot_opened_object_id_focus = last_loot_opened_object_id_list[1]
             table.remove(last_loot_opened_object_id_list, 1) -- Remove the first element
-            last_loot_opened_object_id_next_change= 50 -- Reset the next change timer
+            last_loot_opened_object_id_next_change= 15 -- Reset the next change timer
         
     else 
         last_loot_opened_object_id_focus = nil -- Reset focus if list is empty
@@ -2628,7 +2628,7 @@ createColorFrameLeft(0, -3, function()
         0 , -- 21
         0 , -- 22
         0 , -- 23
-        0 , -- 24s
+        0  -- 24
         
     }, previou24BitsMovingState)
 
