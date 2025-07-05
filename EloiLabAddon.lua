@@ -254,6 +254,56 @@ end
 
 
 
+
+
+time_new_discovered = 0
+
+function GetTimeSinceLastDiscovered()
+    return GetTime() - time_new_discovered
+end
+
+function HasDiscoveredZoneLastSeconds(seconds)
+    if time_new_discovered == 0 then return false end
+    return GetTimeSinceLastDiscovered() < seconds
+end
+
+
+discovered_area_id = 0
+discovered_zone_text = "Zone Discovered"
+discovered_sub_zone_text = "Zone Discovered"
+
+
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("CHAT_MSG_SYSTEM")
+
+f:SetScript("OnEvent", function(self, event, msg)
+    -- Check if the message contains "Discovered"
+    if msg:find("Discovered") then
+        local areaID = C_Map.GetBestMapForUnit("player")
+        if areaID then
+            local areaName = C_Map.GetAreaInfo(areaID)
+            local subZoneName = GetSubZoneText()
+            print("Discovered Area ID: " .. tostring(areaID))
+            print("Discovered Area Name: " .. tostring(areaName))
+            print("Current Sub Zone Name: " .. tostring(subZoneName))
+
+            discovered_area_id = areaID
+            discovered_zone_text = areaName or "Unknown Zone"
+            discovered_sub_zone_text = subZoneName or "Unknown Sub Zone"
+
+            time_new_discovered = GetTime()
+
+        else
+            print("No area ID found.")
+        end
+    end
+end)
+
+
+-----------------------------------------------
+
+
 -- Create a full-screen frame
 local borderFrame = CreateFrame("Frame", "OrangeBorderFrame", UIParent)
 borderFrame:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -2571,7 +2621,7 @@ createColorFrameLeft(0, -3, function()
         IsUnderPercentBreathing(20) and 1 or 0,     -- 14
         IsUnderPercentFatigue(98) and 1 or 0,      -- 15
         IsUnderPercentFatigue(20) and 1 or 0,      -- 16
-        0 , -- 17
+        HasDiscoveredZoneLastSeconds(1.5)  and 1 or 0, -- 17
         0 , -- 18
         0 , -- 19
         0 , -- 20
@@ -2708,3 +2758,6 @@ createColorFrameLeft(0, -2, function()
     },previou24BitsAttackState)
     return red, green, blue
 end)
+
+
+
