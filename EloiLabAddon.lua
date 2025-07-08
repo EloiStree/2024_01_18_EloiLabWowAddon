@@ -2554,7 +2554,7 @@ function turn_to_rgb24_bit_left_right(bitsArrayOf24MaxLenght, debugPreviousState
     if debugPreviousState ~= isState then
         debugPreviousState = isState
         
-        bool_debug = true
+        bool_debug = false
         if bool_debug then
            
             print("New State: " .. isState)
