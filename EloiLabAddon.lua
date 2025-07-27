@@ -5871,31 +5871,33 @@ end)
 
 
 
-
 -- Utility function to convert integer to color bytes
 function IntToColorBytes(value)
+    local dark =0.45
+    local color = {0, 0, 0} -- Default black color
     if value == -1 then
-        return {1, 0.75, 0.8} -- Pink
+        color = {1, 0.75, 0.8} -- Pink
     elseif value == -2 then
-        return {0.5, 0, 0.5} -- Purple
+        color = {0.5, 0, 0.5} -- Purple
     elseif value == 0 then
-        return {0, 0, 0} -- Black
+        color = {0, 0, 0} -- Black
     elseif value == 1 then
-        return {1, 0, 0} -- Red
+        color = {1, 0, 0} -- Red
     elseif value == 2 then
-        return {1, 1, 0} -- Yellow
+        color = {1, 1, 0} -- Yellow
     elseif value == 3 then
-        return {0, 1, 0} -- Green
+        color = {0, 1, 0} -- Green
     elseif value == 4 then
-        return {0, 1, 1} -- Cyan
+        color = {0, 1, 1} -- Cyan
     elseif value == 5 then
-        return {0, 0, 1} -- Blue
+        color = {0, 0, 1} -- Blue
     elseif value == 6 then
-        return {1, 1, 1} -- White
+        color = {1, 1, 1} -- White
     elseif value == 7 then
-        return {0.5, 0.5, 0.5} -- Gray
+        color = {0.5, 0.5, 0.5} -- Gray
     end
-    return {0, 0, 0} -- Default black
+    -- Make the color darker by multiplying by 0.2
+    return {color[1] * dark, color[2] * dark, color[3] * dark}
 end
 
 function integerToInBase8TripleValue(integer)
@@ -6037,7 +6039,7 @@ function createColorFrameLeft(x, y, width, colorFunction)
 end
 
 -- Example usage:
-createColorFrameLeft(50, -60, 20, function()
+createColorFrameLeft(50, -60, 60, function()
     return 0, 0, 0
 end)
 
@@ -6099,15 +6101,17 @@ local lastStaticColor = {0.5, 0, 0.5} -- Purple
 
 -- Create the frame and squares
 local dateTimeFrame = CreateFrame("Frame", "DateTimeColorFrame", UIParent)
-dateTimeFrame:SetSize(22*16, 16)
+dateTimeFrame:SetSize(22*60, 60)
 dateTimeFrame:SetPoint("TOPLEFT", 50, -120)
 dateTimeFrame:SetFrameStrata("TOOLTIP")
 
+
+-- /reload
 local dateTimeSquares = {}
 for i = 1, 22 do
     local square = dateTimeFrame:CreateTexture(nil, "BACKGROUND")
-    square:SetSize(16, 16)
-    square:SetPoint("LEFT", dateTimeFrame, "LEFT", (i-1)*16, 0)
+    square:SetSize(60, 60)
+    square:SetPoint("LEFT", dateTimeFrame, "LEFT", (i-1)*60, 0)
     square:SetColorTexture(0, 0, 0)
     dateTimeSquares[i] = square
 end
