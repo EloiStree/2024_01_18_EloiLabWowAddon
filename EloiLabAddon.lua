@@ -5862,179 +5862,177 @@ end)
 
 
 
--- Utility function to convert integer to color bytes
-function IntToColorBytes(value)
-    local dark =0.45
-    local color = {0, 0, 0} -- Default black color
-    if value == -1 then
-        color = {1, 0.75, 0.8} -- Pink
-    elseif value == -2 then
-        color = {0.5, 0, 0.5} -- Purple
-    elseif value == 0 then
-        color = {0, 0, 0} -- Black
-    elseif value == 1 then
-        color = {1, 0, 0} -- Red
-    elseif value == 2 then
-        color = {1, 1, 0} -- Yellow
-    elseif value == 3 then
-        color = {0, 1, 0} -- Green
-    elseif value == 4 then
-        color = {0, 1, 1} -- Cyan
-    elseif value == 5 then
-        color = {0, 0, 1} -- Blue
-    elseif value == 6 then
-        color = {1, 1, 1} -- White
-    elseif value == 7 then
-        color = {0.5, 0.5, 0.5} -- Gray
-    end
-    -- Make the color darker by multiplying by 0.2
-    return {color[1] * dark, color[2] * dark, color[3] * dark}
-end
+-- -- Utility function to convert integer to color bytes
+-- function IntToColorBytes(value)
+--     local dark =0.45
+--     local color = {0, 0, 0} -- Default black color
+--     if value == -1 then
+--         color = {1, 0.75, 0.8} -- Pink
+--     elseif value == -2 then
+--         color = {0.5, 0, 0.5} -- Purple
+--     elseif value == 0 then
+--         color = {0, 0, 0} -- Black
+--     elseif value == 1 then
+--         color = {1, 0, 0} -- Red
+--     elseif value == 2 then
+--         color = {1, 1, 0} -- Yellow
+--     elseif value == 3 then
+--         color = {0, 1, 0} -- Green
+--     elseif value == 4 then
+--         color = {0, 1, 1} -- Cyan
+--     elseif value == 5 then
+--         color = {0, 0, 1} -- Blue
+--     elseif value == 6 then
+--         color = {1, 1, 1} -- White
+--     elseif value == 7 then
+--         color = {0.5, 0.5, 0.5} -- Gray
+--     end
+--     -- Make the color darker by multiplying by 0.2
+--     return {color[1] * dark, color[2] * dark, color[3] * dark}
+-- end
 
-function integerToInBase8TripleValue(integer)
-    local base8 = string.format("%03o", integer)
-    local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
-    local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
-    local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
-    return c1, c2, c3
-end
+-- function integerToInBase8TripleValue(integer)
+--     local base8 = string.format("%03o", integer)
+--     local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
+--     local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
+--     local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
+--     return c1, c2, c3
+-- end
 
-function integerToInBase8ToFourValue(integer)
-    local base8 = string.format("%04o", integer)
-    local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
-    local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
-    local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
-    local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
-    return c1, c2, c3, c4
-end
+-- function integerToInBase8ToFourValue(integer)
+--     local base8 = string.format("%04o", integer)
+--     local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
+--     local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
+--     local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
+--     local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
+--     return c1, c2, c3, c4
+-- end
 
-function integerToInBase8ToNinveValue(integer)
-    local base8 = string.format("%09o", integer)
-    local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
-    local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
-    local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
-    local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
-    local c5 = IntToColorBytes(tonumber(base8:sub(5, 5)))
-    local c6 = IntToColorBytes(tonumber(base8:sub(6, 6)))
-    local c7 = IntToColorBytes(tonumber(base8:sub(7, 7)))
-    local c8 = IntToColorBytes(tonumber(base8:sub(8, 8)))
-    local c9 = IntToColorBytes(tonumber(base8:sub(9, 9)))
-    return c1, c2, c3, c4, c5, c6, c7, c8, c9
-end
+-- function integerToInBase8ToNinveValue(integer)
+--     local base8 = string.format("%09o", integer)
+--     local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
+--     local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
+--     local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
+--     local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
+--     local c5 = IntToColorBytes(tonumber(base8:sub(5, 5)))
+--     local c6 = IntToColorBytes(tonumber(base8:sub(6, 6)))
+--     local c7 = IntToColorBytes(tonumber(base8:sub(7, 7)))
+--     local c8 = IntToColorBytes(tonumber(base8:sub(8, 8)))
+--     local c9 = IntToColorBytes(tonumber(base8:sub(9, 9)))
+--     return c1, c2, c3, c4, c5, c6, c7, c8, c9
+-- end
 
-function integerToInBase8ToTwelveValue(integer)
-    local base8 = string.format("%012o", integer)
-    local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
-    local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
-    local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
-    local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
-    local c5 = IntToColorBytes(tonumber(base8:sub(5, 5)))
-    local c6 = IntToColorBytes(tonumber(base8:sub(6, 6)))
-    local c7 = IntToColorBytes(tonumber(base8:sub(7, 7)))
-    local c8 = IntToColorBytes(tonumber(base8:sub(8, 8)))
-    local c9 = IntToColorBytes(tonumber(base8:sub(9, 9)))
-    local c10 = IntToColorBytes(tonumber(base8:sub(10, 10)))
-    local c11 = IntToColorBytes(tonumber(base8:sub(11, 11)))
-    local c12 = IntToColorBytes(tonumber(base8:sub(12, 12)))
-    return c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12
-end
+-- function integerToInBase8ToTwelveValue(integer)
+--     local base8 = string.format("%012o", integer)
+--     local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
+--     local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
+--     local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
+--     local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
+--     local c5 = IntToColorBytes(tonumber(base8:sub(5, 5)))
+--     local c6 = IntToColorBytes(tonumber(base8:sub(6, 6)))
+--     local c7 = IntToColorBytes(tonumber(base8:sub(7, 7)))
+--     local c8 = IntToColorBytes(tonumber(base8:sub(8, 8)))
+--     local c9 = IntToColorBytes(tonumber(base8:sub(9, 9)))
+--     local c10 = IntToColorBytes(tonumber(base8:sub(10, 10)))
+--     local c11 = IntToColorBytes(tonumber(base8:sub(11, 11)))
+--     local c12 = IntToColorBytes(tonumber(base8:sub(12, 12)))
+--     return c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12
+-- end
 
-function integerToInBase8ToElevenValue(integer)
-    local base8 = string.format("%011o", integer)
-    local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
-    local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
-    local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
-    local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
-    local c5 = IntToColorBytes(tonumber(base8:sub(5, 5)))
-    local c6 = IntToColorBytes(tonumber(base8:sub(6, 6)))
-    local c7 = IntToColorBytes(tonumber(base8:sub(7, 7)))
-    local c8 = IntToColorBytes(tonumber(base8:sub(8, 8)))
-    local c9 = IntToColorBytes(tonumber(base8:sub(9, 9)))
-    local c10 = IntToColorBytes(tonumber(base8:sub(10, 10)))
-    local c11 = IntToColorBytes(tonumber(base8:sub(11, 11)))
-    return c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11
-end
-
-
-
-diffuse_test_channel = 0
-char_number = 0
-char_number_update_interval = 0.2 -- Update every 0.5 seconds
-local diffuseSquares = {}
-
-function createColorFrameLeft(x, y, width, colorFunction)
-    local frame = CreateFrame("Frame", nil, UIParent)
-    frame:SetSize(width * 11, width)
-    frame:SetPoint("TOPLEFT", x, y)
-
-    local texture = frame:CreateTexture(nil, "BACKGROUND")
-    texture:SetAllPoints()
-    texture:SetColorTexture(0, 0, 0, 1)
-
-    local colors = {
-        {214/255, 0/255,214/255, 1}, -- A15AA1 color
-        {0.5, 0, 0.5, 1}, -- Purple
-        {0, 0, 0, 1}, -- Black
-        {0.5, 0.5, 0, 1}, -- Yellow
-        {1, 1, 0, 1}, -- Bright Yellow
-        {0, 0, 1, 1}, -- Blue
-        {0, 1, 1, 1}, -- Cyan
-        {0, 1, 0, 1}, -- Green
-        {1, 0.5, 0, 1}, -- Orange
-        {1, 0.5, 0.5, 1}, -- Light Orange
-        {0.5, 0, 0.5, 1}, -- Purple
-    }
-    local squares = {}
-    for i, color in ipairs(colors) do
-        local square = frame:CreateTexture(nil, "BACKGROUND")
-        square:SetSize(width, width)
-        square:SetPoint("LEFT", (i - 1) * width, 0)
-        square:SetColorTexture(color[1], color[2], color[3], 0)
-        squares[i] = square
-    end
-    diffuseSquares = squares
-
-    local function updateSquares()
-        local r, g, b = colorFunction()
-        texture:SetColorTexture(r, g, b)
-
-        local c1, c2, c3 = integerToInBase8TripleValue(diffuse_test_channel)
-        diffuseSquares[4]:SetColorTexture(c1[1], c1[2], c1[3])
-        diffuseSquares[5]:SetColorTexture(c2[1], c2[2], c2[3])
-        diffuseSquares[6]:SetColorTexture(c3[1], c3[2], c3[3])
-
-        local c4, c5, c6, c7 = integerToInBase8ToFourValue(char_number)
-        diffuseSquares[7]:SetColorTexture(c4[1], c4[2], c4[3])
-        diffuseSquares[8]:SetColorTexture(c5[1], c5[2], c5[3])
-        diffuseSquares[9]:SetColorTexture(c6[1], c6[2], c6[3])
-        diffuseSquares[10]:SetColorTexture(c7[1], c7[2], c7[3])
-
-        diffuseSquares[1]:SetColorTexture(colors[1][1], colors[1][2], colors[1][3], colors[1][4])
-        diffuseSquares[2]:SetColorTexture(colors[2][1], colors[2][2], colors[2][3], colors[2][4])
-        diffuseSquares[3]:SetColorTexture(colors[3][1], colors[3][2], colors[3][3], colors[3][4])
-        diffuseSquares[11]:SetColorTexture(colors[11][1], colors[11][2], colors[11][3], colors[11][4])
-
-        diffuse_test_channel = diffuse_test_channel + 1
-        char_number = char_number + 1
-        if diffuse_test_channel > 511 then
-            diffuse_test_channel = 0
-        end
-        if char_number > 4095 then
-            char_number = 0
-        end
-    end
-
-    C_Timer.NewTicker(char_number_update_interval, updateSquares)
-
-    return frame
-end
-
--- Example usage:
-createColorFrameLeft(50, -60, 60, function()
-    return 0, 0, 0
-end)
+-- function integerToInBase8ToElevenValue(integer)
+--     local base8 = string.format("%011o", integer)
+--     local c1 = IntToColorBytes(tonumber(base8:sub(1, 1)))
+--     local c2 = IntToColorBytes(tonumber(base8:sub(2, 2)))
+--     local c3 = IntToColorBytes(tonumber(base8:sub(3, 3)))
+--     local c4 = IntToColorBytes(tonumber(base8:sub(4, 4)))
+--     local c5 = IntToColorBytes(tonumber(base8:sub(5, 5)))
+--     local c6 = IntToColorBytes(tonumber(base8:sub(6, 6)))
+--     local c7 = IntToColorBytes(tonumber(base8:sub(7, 7)))
+--     local c8 = IntToColorBytes(tonumber(base8:sub(8, 8)))
+--     local c9 = IntToColorBytes(tonumber(base8:sub(9, 9)))
+--     local c10 = IntToColorBytes(tonumber(base8:sub(10, 10)))
+--     local c11 = IntToColorBytes(tonumber(base8:sub(11, 11)))
+--     return c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11
+-- end
 
 
+
+-- diffuse_test_channel = 0
+-- char_number = 0
+-- char_number_update_interval = 0.2 -- Update every 0.5 seconds
+-- local diffuseSquares = {}
+
+-- function createColorFrameLeft(x, y, width, colorFunction)
+--     local frame = CreateFrame("Frame", nil, UIParent)
+--     frame:SetSize(width * 11, width)
+--     frame:SetPoint("TOPLEFT", x, y)
+
+--     local texture = frame:CreateTexture(nil, "BACKGROUND")
+--     texture:SetAllPoints()
+--     texture:SetColorTexture(0, 0, 0, 1)
+
+--     local colors = {
+--         {214/255, 0/255,214/255, 1}, -- A15AA1 color
+--         {0.5, 0, 0.5, 1}, -- Purple
+--         {0, 0, 0, 1}, -- Black
+--         {0.5, 0.5, 0, 1}, -- Yellow
+--         {1, 1, 0, 1}, -- Bright Yellow
+--         {0, 0, 1, 1}, -- Blue
+--         {0, 1, 1, 1}, -- Cyan
+--         {0, 1, 0, 1}, -- Green
+--         {1, 0.5, 0, 1}, -- Orange
+--         {1, 0.5, 0.5, 1}, -- Light Orange
+--         {0.5, 0, 0.5, 1}, -- Purple
+--     }
+--     local squares = {}
+--     for i, color in ipairs(colors) do
+--         local square = frame:CreateTexture(nil, "BACKGROUND")
+--         square:SetSize(width, width)
+--         square:SetPoint("LEFT", (i - 1) * width, 0)
+--         square:SetColorTexture(color[1], color[2], color[3], 0)
+--         squares[i] = square
+--     end
+--     diffuseSquares = squares
+
+--     local function updateSquares()
+--         local r, g, b = colorFunction()
+--         texture:SetColorTexture(r, g, b)
+
+--         local c1, c2, c3 = integerToInBase8TripleValue(diffuse_test_channel)
+--         diffuseSquares[4]:SetColorTexture(c1[1], c1[2], c1[3])
+--         diffuseSquares[5]:SetColorTexture(c2[1], c2[2], c2[3])
+--         diffuseSquares[6]:SetColorTexture(c3[1], c3[2], c3[3])
+
+--         local c4, c5, c6, c7 = integerToInBase8ToFourValue(char_number)
+--         diffuseSquares[7]:SetColorTexture(c4[1], c4[2], c4[3])
+--         diffuseSquares[8]:SetColorTexture(c5[1], c5[2], c5[3])
+--         diffuseSquares[9]:SetColorTexture(c6[1], c6[2], c6[3])
+--         diffuseSquares[10]:SetColorTexture(c7[1], c7[2], c7[3])
+
+--         diffuseSquares[1]:SetColorTexture(colors[1][1], colors[1][2], colors[1][3], colors[1][4])
+--         diffuseSquares[2]:SetColorTexture(colors[2][1], colors[2][2], colors[2][3], colors[2][4])
+--         diffuseSquares[3]:SetColorTexture(colors[3][1], colors[3][2], colors[3][3], colors[3][4])
+--         diffuseSquares[11]:SetColorTexture(colors[11][1], colors[11][2], colors[11][3], colors[11][4])
+
+--         diffuse_test_channel = diffuse_test_channel + 1
+--         char_number = char_number + 1
+--         if diffuse_test_channel > 511 then
+--             diffuse_test_channel = 0
+--         end
+--         if char_number > 4095 then
+--             char_number = 0
+--         end
+--     end
+
+--     C_Timer.NewTicker(char_number_update_interval, updateSquares)
+
+--     return frame
+-- end
+
+-- -- Example usage:
+-- createColorFrameLeft(50, -60, 60, function()
+--     return 0, 0, 0
+-- end)
 
 
 
@@ -6057,68 +6055,70 @@ end)
 
 
 
--- Create a frame with 22 color squares representing date and time
-local function dateTimeAs18ColorSquares()
-    local year = tonumber(date("%Y"))
-    local month = tonumber(date("%m"))
-    local day = tonumber(date("%d"))
-    local hour = tonumber(date("%H"))
-    local min = tonumber(date("%M"))
-    local sec = tonumber(date("%S"))
-    local yyyymmddasinteger = year * 10000 + month * 100 + day
-
-    -- Calculate milliseconds since midnight
-    local secondsSinceMidnight = hour * 3600 + min * 60 + sec
-    local milliseconds = secondsSinceMidnight * 1000
-
-    local colorsForDate = {integerToInBase8ToNinveValue(yyyymmddasinteger)}
-    local colorsForMilliseconds = {integerToInBase8ToNinveValue(milliseconds)}
-
-    -- Combine to get 18 squares (9+9), pad to 22 with black
-    local squares = {}
-    for i = 1, 9 do squares[#squares+1] = colorsForDate[i] end
-    for i = 1, 9 do squares[#squares+1] = colorsForMilliseconds[i] end
-    while #squares < 22 do squares[#squares+1] = {0,0,0} end
-    return squares
-end
-
--- Static colors for first 3 and last square
-local staticColors = {
-    {1, 0.75, 0.8}, -- Pink
-    {0.5, 0, 0.5},  -- Purple
-    {0, 0, 1},      -- Blue
-}
-local lastStaticColor = {0.5, 0, 0.5} -- Purple
-
--- Create the frame and squares
-local dateTimeFrame = CreateFrame("Frame", "DateTimeColorFrame", UIParent)
-dateTimeFrame:SetSize(22*60, 60)
-dateTimeFrame:SetPoint("TOPLEFT", 50, -120)
-dateTimeFrame:SetFrameStrata("TOOLTIP")
 
 
--- /reload
-local dateTimeSquares = {}
-for i = 1, 22 do
-    local square = dateTimeFrame:CreateTexture(nil, "BACKGROUND")
-    square:SetSize(60, 60)
-    square:SetPoint("LEFT", dateTimeFrame, "LEFT", (i-1)*60, 0)
-    square:SetColorTexture(0, 0, 0)
-    dateTimeSquares[i] = square
-end
+-- -- Create a frame with 22 color squares representing date and time
+-- local function dateTimeAs18ColorSquares()
+--     local year = tonumber(date("%Y"))
+--     local month = tonumber(date("%m"))
+--     local day = tonumber(date("%d"))
+--     local hour = tonumber(date("%H"))
+--     local min = tonumber(date("%M"))
+--     local sec = tonumber(date("%S"))
+--     local yyyymmddasinteger = year * 10000 + month * 100 + day
 
--- Update squares every 0.1 seconds using C_Timer.NewTicker
-C_Timer.NewTicker(0.1, function()
-    local squares = dateTimeAs18ColorSquares()
-    -- Set static colors for first 3 squares
-    for i = 1, 3 do
-        dateTimeSquares[i]:SetColorTexture(staticColors[i][1], staticColors[i][2], staticColors[i][3])
-    end
-    -- Set dynamic colors for squares 4 to 21
-    for i = 1, 18 do
-        local c = squares[i]
-        dateTimeSquares[i+3]:SetColorTexture(c[1], c[2], c[3])
-    end
-    -- Set last square to static purple
-    dateTimeSquares[22]:SetColorTexture(lastStaticColor[1], lastStaticColor[2], lastStaticColor[3])
-end)
+--     -- Calculate milliseconds since midnight
+--     local secondsSinceMidnight = hour * 3600 + min * 60 + sec
+--     local milliseconds = secondsSinceMidnight * 1000
+
+--     local colorsForDate = {integerToInBase8ToNinveValue(yyyymmddasinteger)}
+--     local colorsForMilliseconds = {integerToInBase8ToNinveValue(milliseconds)}
+
+--     -- Combine to get 18 squares (9+9), pad to 22 with black
+--     local squares = {}
+--     for i = 1, 9 do squares[#squares+1] = colorsForDate[i] end
+--     for i = 1, 9 do squares[#squares+1] = colorsForMilliseconds[i] end
+--     while #squares < 22 do squares[#squares+1] = {0,0,0} end
+--     return squares
+-- end
+
+-- -- Static colors for first 3 and last square
+-- local staticColors = {
+--     {1, 0.75, 0.8}, -- Pink
+--     {0.5, 0, 0.5},  -- Purple
+--     {0, 0, 1},      -- Blue
+-- }
+-- local lastStaticColor = {0.5, 0, 0.5} -- Purple
+
+-- -- Create the frame and squares
+-- local dateTimeFrame = CreateFrame("Frame", "DateTimeColorFrame", UIParent)
+-- dateTimeFrame:SetSize(22*60, 60)
+-- dateTimeFrame:SetPoint("TOPLEFT", 50, -120)
+-- dateTimeFrame:SetFrameStrata("TOOLTIP")
+
+
+-- -- /reload
+-- local dateTimeSquares = {}
+-- for i = 1, 22 do
+--     local square = dateTimeFrame:CreateTexture(nil, "BACKGROUND")
+--     square:SetSize(60, 60)
+--     square:SetPoint("LEFT", dateTimeFrame, "LEFT", (i-1)*60, 0)
+--     square:SetColorTexture(0, 0, 0)
+--     dateTimeSquares[i] = square
+-- end
+
+-- -- Update squares every 0.1 seconds using C_Timer.NewTicker
+-- C_Timer.NewTicker(0.1, function()
+--     local squares = dateTimeAs18ColorSquares()
+--     -- Set static colors for first 3 squares
+--     for i = 1, 3 do
+--         dateTimeSquares[i]:SetColorTexture(staticColors[i][1], staticColors[i][2], staticColors[i][3])
+--     end
+--     -- Set dynamic colors for squares 4 to 21
+--     for i = 1, 18 do
+--         local c = squares[i]
+--         dateTimeSquares[i+3]:SetColorTexture(c[1], c[2], c[3])
+--     end
+--     -- Set last square to static purple
+--     dateTimeSquares[22]:SetColorTexture(lastStaticColor[1], lastStaticColor[2], lastStaticColor[3])
+-- end)
