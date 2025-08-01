@@ -7,17 +7,8 @@ local borderColor = { r = 0, g = 1, b = 0, a = 1 } -- Orange
 
 
 
-
-
-
-
-
-
 local isClassic = false
 local isRetail = false
-
-
-
 
 
 
